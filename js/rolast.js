@@ -1,10 +1,5 @@
-checkTable = function(table){
-	if (table.limits.length !== table.data.length){throw "Table has different limit and data length";}
-	if (table.limits[0] !== 0){throw "Table limit doesn't start with 0";}
-};
 
 processTable = function(table){
-	checkTable(table);
 	return _.extend(table,{
 		range: _.range(table.limits.length),
 		revrange: _.range(table.limits.length).reverse(),
@@ -32,18 +27,88 @@ window.rolast = {
 			calcMax: function(limit){ return 37.5+Math.floor((10*limit-220)/2)*0.25; }
 		})
 	},
-	readTable: function(table,limit){
+	lookUpInTable: function(table,limit){
 		return limit < table.minlimit ? table.mindata : limit >= table.maxlimit ? (table.calcMax ? table.calcMax(limit) : table.maxdata) : table.data[_.find(limit <= table.midlimit ? table.range : table.revrange,function(n){
 			return limit >= table.limits[n] && limit < table.limits[n+1];
 		})];
 	},
-	getGeneralLimit: function(road,vehicle){
-		return road === 3 ? "---" :
-			road === 2 ? (vehicle.hasengine && vehicle.numberOfAxles === 2 ? 18 : "---") :
-			vehicle.isJointBus && vehicle.numberOfAxles === 3 ? 28 :
-			vehicle.isTrailer && vehicle.totalAxleDistance >= 7.2 ? 36 :
-			vehicle.hasEngine && vehicle.numberOfAxles === 2 ? 18 :
-			vehicle.hasEngine && vehicle.numberOfAxles === 3 ? (vehicle.hasGoodSuspension ? 26 : 25) :
-			vehicle.hasEngine && vehicle.numberOfAxles >= 4 ? (vehicle.hasGoodSuspension ? 32 : 31) : "---";
+	matchValue: function(val,against){
+		switch(against[0]){
+			case "ormore": return val >= against[1];
+			case "lessthan": return val < against[1];
+			case "between": return val >= against[1] && val < against[2];
+			default: return val === against;
+		}
+	},
+	performMatch: function(match,data){
+		console.log("matching",match,"against",data)
+		return _.reduce(match,function(memo,testpropval,testpropname){
+			return memo && this.matchValue(testpropval,data[testpropname]);
+		},true,this);
+	},
+	lookUpInList: function(list,data){
+		var lookup = _.find(list,function(listentry){return this.performMatch(listentry[0],data);},this); // now we have a listentry or nothing
+		return lookup && this.processListResult(lookup[1],data);
+	},
+	processListResult: function(result,data){
+		result = _.ensureArray(result);
+		switch(result[0]){ // result is [instruction,arg1,arg2] or just [value]
+			case "tablelookup": // [tablelookup,tablename,datapropname]
+				console.log("Table lookup!");
+				return this.lookUpInTable(this.tables[result[1]],data[result[2]]);
+			default:
+				console.log("noprocess result",result);
+				return result;
+		}
+	},
+	describeAxle: function(data){
+		var desc = "En "+(data.isPropulsionAxle === true ? "drivande " : data.isPropulsionAxle === false ? "ickedrivande " : ""),
+			kind = ["","axel ","boggie ","trippelaxel "][data.axles] || "",
+			susp = (data.hasGoodSuspension === true ? "med bra fjädring " : data.hasGoodSuspension === false ? "utan bra fjädring " : ""),
+			width;
+		switch(data.axleWidth && data.axleWidth[0]){
+			case "lessthan": width = "med avstånd mindre än "+data.axleWidth[1]+" "; break;
+			case "between": width = "med avstånd "+data.axleWidth[1]+" eller mer men mindre än "+data.axleWidth[2]+" "; break;
+			case "lessthan": width = "med avstånd "+data.axleWidth[1]+" eller mer "; break;
+			default: width = "";
+		}
+		return desc+kind+susp+width;
+	},
+	lists: { // a listentry is [test,result,desc]
+		weightLimits: [
+			[{road: 1}, ["tablelookup","weightBK1","totalAxleDistance"] ],
+			[{road: 2}, ["tablelookup","weightBK2","totalAxleDistance"] ],
+			[{road: 3}, ["tablelookup","weightBK3","totalAxleDistance"] ]
+		],
+		generalLimits: [
+			[{road: 3}, "---","allroad3"],
+			[{hasEngine:true,numberOfAxles:2}, 18],
+			[{road: 2}, "---","othersonroad2"],
+			[{road: 1, hasEngine:true,numberOfAxles:3,hasGoodSuspension:true},26],
+			[{road: 1, hasEngine:true,numberOfAxles:3,hasGoodSuspension:false}, 25],
+			[{road: 1, numberOfAxles:3,isJointBus:true}, 28],
+			[{road: 1, hasEngine:true,numberOfAxles:["ormore",4],hasGoodSuspension:true}, 32],
+			[{road: 1, hasEngine:true,numberOfAxles:["ormore",4],hasGoodSuspension:false}, 31],
+			[{road: 1, isTrailer:true,totalAxleDistance:["ormore",7.2]}, 36],
+			[{road: 1}, "---","othersonroad1"]
+		],
+		axleLimits: [
+			[{road:1,axles:1,isPropulsionAxle:true},11.5],
+			[{road:1,axles:1,isPropulsionAxle:false},10],
+			[{road:2,axles:1},10],
+			[{road:3,axles:1},8],
+			[{axles:2,axleWidth:["lessthan",100]},11.5],
+			[{road:1,axles:2,axleWidth:["between",100,130]},16],
+			[{road:1,axles:2,axleWidth:["between",130,180],hasGoodSuspension:false},18],
+			[{road:1,axles:2,axleWidth:["between",130,180],hasGoodSuspension:true},19],
+			[{road:1,axles:2,axleWidth:["ormore",180]},20],
+			[{road:2,axles:2,axleWidth:["ormore",100]},16],
+			[{road:3,axles:2,axleWidth:["ormore",100]},12],
+			[{road:1,axles:3,axleWidth:["lessthan",260]},21],
+			[{road:1,axles:3,axleWidth:["ormore",260]},24],
+			[{road:2,axles:3,axleWidth:["lessthan",260]},20],
+			[{road:2,axles:3,axleWidth:["ormore",260]},22],
+			[{road:3,axles:3},13],
+		],
 	}
 };
