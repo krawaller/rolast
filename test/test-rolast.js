@@ -150,9 +150,9 @@ describe("the matcher stuff",function(){
 			it("returns true",function(){ expect(res).toEqual(true); });
 			it("called matchValue correctly",function(){
 				expect(context.matchValue).toHaveBeenCalledThrice();
-				expect(context.matchValue.firstCall.args).toEqual([matchvals[0],data[matchkeys[0]]]);
-				expect(context.matchValue.secondCall.args).toEqual([matchvals[1],data[matchkeys[1]]]);
-				expect(context.matchValue.thirdCall.args).toEqual([matchvals[2],data[matchkeys[2]]]);
+				expect(context.matchValue.firstCall.args).toEqual([data[matchkeys[0],matchvals[0]]]);
+				expect(context.matchValue.secondCall.args).toEqual([data[matchkeys[1],matchvals[1]]]);
+				expect(context.matchValue.thirdCall.args).toEqual([data[matchkeys[2],matchvals[2]]]);
 			});
 		});
 		describe("for failing match",function(){
@@ -162,8 +162,8 @@ describe("the matcher stuff",function(){
 			it("returns false",function(){ expect(res).toEqual(false); });
 			it("called matchValue correctly",function(){
 				expect(context.matchValue).toHaveBeenCalledTwice();
-				expect(context.matchValue.firstCall.args).toEqual([matchvals[0],data[matchkeys[0]]]);
-				expect(context.matchValue.secondCall.args).toEqual([matchvals[1],data[matchkeys[1]]]);
+				expect(context.matchValue.firstCall.args).toEqual([data[matchkeys[0],matchvals[0]]]);
+				expect(context.matchValue.secondCall.args).toEqual([data[matchkeys[1],matchvals[1]]]);
 			});
 		});
 	});

@@ -32,23 +32,28 @@ window.rolast = {
 			return limit >= table.limits[n] && limit < table.limits[n+1];
 		})];
 	},
-	matchValue: function(val,against){
+	matchValue: function(against,val){
+		console.log(" ... MATCHVALUE ",val,"against",against,"type",against[0]);
 		switch(against[0]){
-			case "ormore": return val >= against[1];
-			case "lessthan": return val < against[1];
+			case "ormore":
+				//console.log(" ... MATCHVALUE ",val,"against",against,"result",val >= against[1]);
+				return val >= against[1];
+			case "lessthan":
+				console.log(" ... MATCHVALUE ",val,"against",against,"result",val < against[1]);
+				return val < against[1];
 			case "between": return val >= against[1] && val < against[2];
 			default: return val === against;
 		}
 	},
 	performMatch: function(match,data){
-		console.log("matching",match,"against",data)
+		console.log("matching",match,"against",data);
 		return _.reduce(match,function(memo,testpropval,testpropname){
 			return memo && this.matchValue(testpropval,data[testpropname]);
 		},true,this);
 	},
 	lookUpInList: function(list,data){
 		var lookup = _.find(list,function(listentry){return this.performMatch(listentry[0],data);},this); // now we have a listentry or nothing
-		return lookup && this.processListResult(lookup[1],data);
+		return lookup && [lookup[0],this.processListResult(lookup[1],data)] || [];
 	},
 	processListResult: function(result,data){
 		result = _.ensureArray(result);
@@ -62,17 +67,28 @@ window.rolast = {
 		}
 	},
 	describeAxle: function(data){
-		var desc = "En "+(data.isPropulsionAxle === true ? "drivande " : data.isPropulsionAxle === false ? "ickedrivande " : ""),
+		var desc = "en "+(data.isPropulsionAxle === true ? "drivande " : data.isPropulsionAxle === false ? "ickedrivande " : ""),
 			kind = ["","axel ","boggie ","trippelaxel "][data.axles] || "",
 			susp = (data.hasGoodSuspension === true ? "med bra fjädring " : data.hasGoodSuspension === false ? "utan bra fjädring " : ""),
-			width;
-		switch(data.axleWidth && data.axleWidth[0]){
-			case "lessthan": width = "med avstånd mindre än "+data.axleWidth[1]+" "; break;
-			case "between": width = "med avstånd "+data.axleWidth[1]+" eller mer men mindre än "+data.axleWidth[2]+" "; break;
-			case "lessthan": width = "med avstånd "+data.axleWidth[1]+" eller mer "; break;
-			default: width = "";
-		}
+			width = data.axleWidth ? "med bredd "+this.describeTestValue(data.axleWidth,"centimeter")+" " : "";
 		return desc+kind+susp+width;
+	},
+	describeTestValue: function(testval,unit,fixed){
+		var more = fixed ? "fler" : "mer",
+			less = fixed ? "färre" : "mindre";
+		switch(testval[0]){
+			case "lessthan": return less+" än "+testval[1]+" "+unit;
+			case "between": return testval[1]+" "+unit+" eller "+more+" men "+less+" än "+testval[2]+" "+unit;
+			case "ormore": return testval[1]+" "+unit+" eller "+more+" ";
+			default: return testval+" "+unit;
+		}
+	},
+	describeVehicle: function(data){
+		var type = data.isJointBus ? "en ledbuss" : data.hasEngine ? "ett motordrivet fordon" : data.hasEngine === false ? "ett släp" : "ett fordon",
+			susp = (data.hasGoodSuspension === true ? " med bra fjädring " : data.hasGoodSuspension === false ? " utan bra fjädring " : ""),
+			axles = (data.numberOfAxles ? (susp ? " och " : " med ")+this.describeTestValue(data.numberOfAxles,"axlar",true) : ""),
+			dist = (data.totalAxleDistance ? (susp || axles ? " och " : " med axelavstånd ")+this.describeTestValue(data.totalAxleDistance,"meter") : "");
+		return type+susp+axles+dist;
 	},
 	lists: { // a listentry is [test,result,desc]
 		weightLimits: [
@@ -84,12 +100,12 @@ window.rolast = {
 			[{road: 3}, "---","allroad3"],
 			[{hasEngine:true,numberOfAxles:2}, 18],
 			[{road: 2}, "---","othersonroad2"],
+			[{road: 1, numberOfAxles:3,isJointBus:true}, 28],
 			[{road: 1, hasEngine:true,numberOfAxles:3,hasGoodSuspension:true},26],
 			[{road: 1, hasEngine:true,numberOfAxles:3,hasGoodSuspension:false}, 25],
-			[{road: 1, numberOfAxles:3,isJointBus:true}, 28],
 			[{road: 1, hasEngine:true,numberOfAxles:["ormore",4],hasGoodSuspension:true}, 32],
 			[{road: 1, hasEngine:true,numberOfAxles:["ormore",4],hasGoodSuspension:false}, 31],
-			[{road: 1, isTrailer:true,totalAxleDistance:["ormore",7.2]}, 36],
+			[{road: 1, hasEngine:false,totalAxleDistance:["ormore",7.2]}, 36], // trailer!
 			[{road: 1}, "---","othersonroad1"]
 		],
 		axleLimits: [

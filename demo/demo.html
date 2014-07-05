@@ -5,61 +5,66 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8">
 	</head>
 	<body>
-		<h2>Test av bruttoviktstabell</h2>
 		<form id="weightform">
-			<select name="road">
-	  			<option value="1">BK1</option> 
-	  			<option value="2" selected>BK2</option>
-	  			<option value="3">BK3</option>
-			</select>
-			<input type="text" placeholder="avstånd" name="distance" />
-			<button type="submit" id="testweight" value="Kolla!">Kolla!</button>
-			<p id='weightresult'></p>
+			<fieldset>
+				<legend>Bruttoviktstabell</legend>
+				<select name="road">
+		  			<option value="1">BK1</option> 
+		  			<option value="2" selected>BK2</option>
+		  			<option value="3">BK3</option>
+				</select>
+				<input type="text" placeholder="axelavstånd i m" name="distance" />
+				<button type="submit" id="testweight" value="Kolla!">Kolla!</button>
+				<p id='weightresult'></p>
+			</fieldset>
 		</form>
-
+		<br/>
 		<form id="axleform">
-			<select name="road">
-	  			<option value="1">BK1</option> 
-	  			<option value="2" selected>BK2</option>
-	  			<option value="3">BK3</option>
-			</select>
-			<select name="type">
-	  			<option value="1">axel</option> 
-	  			<option value="2" selected>boggie</option>
-	  			<option value="3">trippelaxel</option>
-			</select>
-			<label><input type="checkbox" name="susp" value="susp">Bra fjädring</label>
-			<label><input type="checkbox" name="prop" value="prop">Drivande</label>
-			<input type="text" placeholder="avstånd" name="distance" />
-			<button type="submit" id="testaxle" value="Kolla!">Kolla!</button>
-			<p id='axleresult'></p>
+			<fieldset>
+				<legend>Axelbelastning</legend>
+				<select name="road">
+		  			<option value="1">BK1</option> 
+		  			<option value="2" selected>BK2</option>
+		  			<option value="3">BK3</option>
+				</select>
+				<select id="axletype" name="type">
+		  			<option value="1">axel</option> 
+		  			<option value="2" selected>boggie</option>
+		  			<option value="3">trippelaxel</option>
+				</select>
+				<label><input type="checkbox" name="susp" value="susp">Bra fjädring</label>
+				<label><input type="checkbox" name="prop" value="prop">Drivande</label>
+				<input id="axledistance" type="number" placeholder="axelavstånd i cm" name="distance" />
+				<button type="submit" id="testaxle" value="Kolla!">Kolla!</button>
+				<p id='axleresult'></p>
+			</fieldset>
+		</form>
+		<br/>
+		<form id="generalform">
+			<fieldset>
+				<legend>Generell begränsning</legend>
+				<select name="road">
+		  			<option value="1">BK1</option> 
+		  			<option value="2" selected>BK2</option>
+		  			<option value="3">BK3</option>
+				</select>
+				<select name="type">
+		  			<option value="engine">motordrivet fordon</option> 
+		  			<option value="jointbus" selected>ledbuss</option>
+		  			<option value="trailer">släp</option>
+				</select>
+				<input type="number" placeholder="antal axlar" name="numaxles" />
+				<label><input type="checkbox" name="susp" value="susp">Bra fjädring</label>
+				<input type="number" placeholder="axelavstånd i m" name="distance" />
+				<button type="submit" id="testgeneral" value="Kolla!">Kolla!</button>
+				<p id='generalresult'></p>
+			</fieldset>
 		</form>
 
 		<script type="text/javascript" src="../lib/lodash/lodash.js"></script>
 		<script type="text/javascript" src="../lib/lodash/lodashmixins.js"></script>
 		<script type="text/javascript" src="jquery.js"></script>
+		<script type="text/javascript" src="demo.js"></script>
 		<script type="text/javascript" src="../js/rolast.js"></script>
-
-
-		<script type="text/javascript">
-			$("#weightform").submit(function(e){
-				e.preventDefault();
-				var form = $(this).serializeArray(),
-					data = {road:+form[0].value,totalAxleDistance:+form[1].value.replace(/\,/,".")},
-					list = rolast.lists.weightLimits,
-					result = rolast.lookUpInList(list,data);
-				console.log(data,result);
-				$("#weightresult").html("På BK"+data.road+"-väg med totalt axelavstånd "+data.totalAxleDistance+" meter så är bruttomaxvikten "+result+" ton.");
-			});
-			$("#axleform").submit(function(e){
-				e.preventDefault();
-				var form = _.reduce($(this).serializeArray(),function(memo,val,key){ memo[val.name] = val.value; return memo;},{});
-					data = {road:+form.road,axles:+form.type,axleWidth:+form.distance.replace(/\,/,"."),hasGoodSuspension: !!form.susp, isPropulsionAxle: !!form.prop},
-					list = rolast.lists.axleLimits,
-					result = rolast.lookUpInList(list,data);
-					
-				console.log(form,data,result);
-			});
-		</script>
 	</body>
 </html>
