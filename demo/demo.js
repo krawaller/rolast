@@ -1,14 +1,15 @@
 $("#weightform").submit(function(e){
 	e.preventDefault();
-	var form = $(this).serializeArray(),
+	var form = _.reduce($(this).serializeArray(),function(memo,val,key){ memo[val.name] = val.value; return memo;},{}),
 		data = {
-			road:+form[0].value,
-			totalAxleDistance:+form[1].value.replace(/\,/,".")
+			road:+form.road,
+			hasEngine: form.type != "trailer",
+			totalAxleDistance:+form.distance.replace(/\,/,".")
 		},
 		page = ["foo",11,13,14][data.road],
 		list = rolast.lists.weightLimits,
 		result = rolast.lookUpInList(list,data);
-	$("#weightresult").html("På BK"+data.road+"-väg med totalt axelavstånd "+data.totalAxleDistance+" meter så är bruttomaxvikten "+result[1]+" ton. (sid "+page+" i häftet)");
+	$("#weightresult").html("På BK"+data.road+"-väg så är bruttomaxvikten "+result[1]+" ton för "+rolast.describeVehicle(result[0])+". (sid "+page+" i häftet)");
 });
 $("#axleform").submit(function(e){
 	e.preventDefault();

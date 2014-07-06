@@ -24,10 +24,33 @@ window.rolast = {
 		weightBK3: processTable({
 			limits: [0,2,2.4,2.8,3.2,3.6,4,4.4,4.8,5.2,5.6,6,6.4,6.8,7.2,7.6,8,8.4,8.8,9.2,9.6,10,10.4,10.8,11.2,11.6,12,12.4,12.8,13.2,13.6,14,14.4,14.8,15.2,15.6,16,16.4,16.8,17.2,17.6,18,18.4,18.8,19.2,19.6,20,20.4,20.8,21.2,21.6,22],
 			data: [12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20,20.5,21,21.5,22,22.5,23,23.5,24,24.5,25,25.5,26,26.5,27,27.5,28,28.5,29,29.5,30,30.5,31,31.5,32,32.5,33,33.5,34,34.5,35,35.5,36,36.5,37,37.5],
-			calcMax: function(limit){ return 37.5+Math.floor((10*limit-220)/2)*0.25; }
+			flowstep: 0.2,
+			flowadd: 0.25
+			//calcMax: function(limit){ return 37.5+Math.floor((10*limit-220)/2)*0.25; }
 		})
 	},
 	lookUpInTable: function(table,limit){
+		if (limit < table.minlimit){
+			return [["lessthan",table.minlimit],table.mindata];
+		} else if (limit >= table.maxlimit) {
+			if (table.flowstep) {
+				var overflow = (limit*10-table.maxlimit*10)/10,
+					numstepsover = Math.floor((10*(overflow))/(10*table.flowstep)),
+					lower = (table.maxlimit*10+numstepsover*table.flowstep*10)/10,
+					higher = (lower*10+table.flowstep*10)/10,
+					val = table.maxdata+numstepsover*table.flowadd;
+				console.log("input",limit,"tablemax",table.maxlimit,"overflow",overflow,"stepsize",table.flowstep,"numstepsover",numstepsover,"lower",lower,"higher",higher);
+				return [["between",lower,higher],val];
+			} else {
+				return [["ormore",table.maxlimit],table.maxdata];
+			}
+		} else {
+			var n = _.find(table.range,function(n){return limit >= table.limits[n] && limit < table.limits[n+1];});
+			console.log("Table between value. n",n);
+			return [["between",table.limits[n],table.limits[n+1]],table.data[n]];
+		}
+	},
+	lookUpInTableOLD: function(table,limit){
 		return limit < table.minlimit ? table.mindata : limit >= table.maxlimit ? (table.calcMax ? table.calcMax(limit) : table.maxdata) : table.data[_.find(limit <= table.midlimit ? table.range : table.revrange,function(n){
 			return limit >= table.limits[n] && limit < table.limits[n+1];
 		})];
@@ -53,24 +76,30 @@ window.rolast = {
 	},
 	lookUpInList: function(list,data){
 		var lookup = _.find(list,function(listentry){return this.performMatch(listentry[0],data);},this); // now we have a listentry or nothing
-		return lookup && [lookup[0],this.processListResult(lookup[1],data)] || [];
+		return lookup && this.processListResult(lookup,data);
+		//return lookup && [lookup[0],this.processListResult(lookup[1],data)] || [];
 	},
-	processListResult: function(result,data){
+	processListResult: function(listentry,data){
+		var match = listentry[0], result =  _.ensureArray(listentry[1]);
 		result = _.ensureArray(result);
 		switch(result[0]){ // result is [instruction,arg1,arg2] or just [value]
 			case "tablelookup": // [tablelookup,tablename,datapropname]
-				console.log("Table lookup!");
-				return this.lookUpInTable(this.tables[result[1]],data[result[2]]);
+				console.log("table lookup");
+				var tablename = result[1], propname = result[2],
+					tablelookup = this.lookUpInTable(this.tables[tablename],data[propname]),
+					betweencondition = tablelookup[0],
+					answer = tablelookup[1];
+				return [_.extend({},match,_.object([propname],[betweencondition])),answer];
 			default:
 				console.log("noprocess result",result);
-				return result;
+				return listentry;
 		}
 	},
 	describeAxle: function(data){
 		var desc = "en "+(data.isPropulsionAxle === true ? "drivande " : data.isPropulsionAxle === false ? "ickedrivande " : ""),
 			kind = ["","axel ","boggie ","trippelaxel "][data.axles] || "",
 			susp = (data.hasGoodSuspension === true ? "med bra fjädring " : data.hasGoodSuspension === false ? "utan bra fjädring " : ""),
-			width = data.axleWidth ? "med bredd "+this.describeTestValue(data.axleWidth,"centimeter")+" " : "";
+			width = data.axleWidth ? (susp?" och":" med")+" bredd "+this.describeTestValue(data.axleWidth,"centimeter")+" " : "";
 		return desc+kind+susp+width;
 	},
 	describeTestValue: function(testval,unit,fixed){
@@ -92,6 +121,10 @@ window.rolast = {
 	},
 	lists: { // a listentry is [test,result,desc]
 		weightLimits: [
+			[{road: 1,hasEngine:false,totalAxleDistance:["between",6.6,6.8]},33],
+			[{road: 1,hasEngine:false,totalAxleDistance:["between",6.8,7]},34],
+			[{road: 1,hasEngine:false,totalAxleDistance:["between",7,7.2]},35],
+			[{road: 1,hasEngine:false,totalAxleDistance:["morethan",7.2]},36],
 			[{road: 1}, ["tablelookup","weightBK1","totalAxleDistance"] ],
 			[{road: 2}, ["tablelookup","weightBK2","totalAxleDistance"] ],
 			[{road: 3}, ["tablelookup","weightBK3","totalAxleDistance"] ]

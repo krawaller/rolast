@@ -17,6 +17,10 @@ Detta är en testsida för de olika delfunktionerna i Rolands lastapp, med arbet
 		  			<option value="2" selected>BK2</option>
 		  			<option value="3">BK3</option>
 				</select>
+				<select name="type">
+		  			<option value="engine" selected>motordrivet fordon</option> 
+		  			<option value="trailer">släp</option>
+				</select>
 				<input type="text" placeholder="axelavstånd i m" name="distance" />
 				<button type="submit" id="testweight" value="Kolla!">Kolla!</button>
 				<p id='weightresult'></p>
@@ -53,9 +57,9 @@ Detta är en testsida för de olika delfunktionerna i Rolands lastapp, med arbet
 		  			<option value="3">BK3</option>
 				</select>
 				<select name="type">
-		  			<option value="engine">motordrivet fordon</option> 
-		  			<option value="jointbus" selected>ledbuss</option>
+		  			<option value="engine" selected>motordrivet fordon</option> 
 		  			<option value="trailer">släp</option>
+		  			<option value="jointbus">ledbuss</option>
 				</select>
 				<input type="number" placeholder="antal axlar" name="numaxles" />
 				<label><input type="checkbox" name="susp" value="susp">Bra fjädring</label>
