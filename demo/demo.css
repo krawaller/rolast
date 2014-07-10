@@ -1,0 +1,36 @@
+.axle {
+	display: block;
+	float: left;
+	min-height: 4em;
+	min-width: 4em;
+	border-radius: 2em;
+	background-color: #DDD;
+	text-align: center;
+}
+.axle-boggie {
+	min-width: 7em;
+}
+.axle-trippel {
+	min-width: 10em;
+}
+.axledistancetonext {
+	display: block;
+	float: left;
+	width: 5em;
+	height: 3px;
+	border-top: 4px solid #DDD;
+	position: relative;
+	top: 1.7em;
+	text-align: center;
+}
+.axledesc, .axlewidth {
+	display: block;
+}
+
+input[type="number"] {
+	min-width: 150px;
+}
+
+.axledesc {
+	margin-top: 10px;
+}

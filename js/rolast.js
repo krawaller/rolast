@@ -159,5 +159,45 @@ window.rolast = {
 			[{road:2,axles:3,axleWidth:["ormore",260]},22],
 			[{road:3,axles:3},13],
 		],
+	},
+	findNextAxleGroup: function(arr){ // takes array of distances, returns type which is number of axles in group (1, 2 or 3)
+		return arr.length >= 2 && arr[0]+arr[1] < 5 ? 3 : arr.length >= 1 && arr[0] < 2 ? 2 : 1;
+	},
+	findAxleGroupArray: function(distances){
+		var arr = [];
+		while (distances.length) {
+			var type = this.findNextAxleGroup(distances),
+				obj = {axles:type,axleWidth: _.sum(_.first(distances,type-1)),distanceToNext:distances[type-1]||0 };
+			arr = arr.concat( type === distances.length ? [obj,{axles:1,axleWidth:0,distanceToNext:0}] : obj );
+			distances = _.rest(distances,type);
+		}
+		return arr;
+	},
+	testAxleGroupPropulsion: function(data,type,n,grouparr){
+		return data.hasEngine && n === grouparr.length-1; // how to do this? :P
+	},
+	processAxleGroup: function(data,axleobj,n,grouparr){
+		return _.extend(axleobj,{
+			hassGoodSuspension: data.hasGoodSuspension,
+			isPropulsionAxle: this.textAxleGroupPropulsion(data,axleobj.axles,n,grouparr),
+			groupOrderNumber: n,
+			weightLimit: data.axleWeightLimits[n]
+		});
+	},
+	processAxleGroupArray: function(data,grouparr){
+		return _.map(grouparr,function(element,index){
+			return this.processAxleGroup(data,axle,index,grouparr);
+		},this);
+	},
+	calculateAxleGroups: function(data){
+		return this.processAxleGroupArray(data,this.findAxleGroupArray(data));
+	},
+	printAxle: function(axle){
+		var desc = ["FOOBAR","axel","boggie","trippel"][axle.axles];
+		return "<span class='axle axle-"+desc+"'><span class='axledesc'>"+desc+"</span>"+(axle.axles!=1?"<span class='axlewidth'>"+axle.axleWidth+"m</span>":"")+"</span>"+(axle.distanceToNext ? "<span class='axledistancetonext'>"+axle.distanceToNext+"m</span>":"");
 	}
 };
+
+
+
+

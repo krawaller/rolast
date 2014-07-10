@@ -45,3 +45,18 @@ $("#generalform").submit(function(e){
 		result = rolast.lookUpInList(list,data);
 	$("#generalresult").html("På BK"+data.road+"-väg har "+(result[1] == "---" ? "detta fordon ingen viktbegränsning" : rolast.describeVehicle(result[0])+" maxvikten "+result[1]+" ton" )+". (sid 12 i häftet)");
 });
+
+var distances = [];
+$("#axlegroupresult").html(rolast.printAxle({axles:1}));
+$("#axlegroupform").submit(function(e){
+	e.preventDefault();
+	var form = _.reduce($(this).serializeArray(),function(memo,val,key){ memo[val.name] = val.value; return memo;},{});
+	distances.push(+form.axledist);
+	console.log(distances);
+	var arr = rolast.findAxleGroupArray(distances);
+	$("#axlegroupresult").html( _.reduce(arr,function(str,axle){return str+rolast.printAxle(axle);},"") );
+});
+$("#axlegroupform").on("reset",function(e){
+	$("#axlegroupresult").html(rolast.printAxle({axles:1}));
+	distances = [];
+});
