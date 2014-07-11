@@ -178,21 +178,4 @@ $("#totalform").submit(function(e){
 	}
 });
 
-/*
-var data = {
-	axleDistances: [5,1],
-	hasEngine: true,
-	road: 1,
-	axleWeightLimits: [7,12],
-	serviceWeight: 12,
-	maxWeight: 25
-};
-data = rolast.processData(data);
-var result = rolast.calculate( rolast.calculations.maxLoad, data );
-$("#totalresult").html(rolast.printCalcResult(result,data));
-
-*/
-
-
-
 
