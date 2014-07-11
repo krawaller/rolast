@@ -26,9 +26,15 @@ $("#axleform").submit(function(e){
 		result = rolast.lookUpInList(list,data);
 	$("#axleresult").html("På BK"+data.road+"-väg får "+rolast.describeAxle(result[0])+" bära max "+result[1]+" ton. (sid "+page+" i häftet)" );
 });
+var hiddenval = 0;
 $("#axletype").change(function(e){
 	var val = $(this).val();
-	$("#axledistance")[val>1?"show":"hide"]();
+	if (val > 1){
+		$("#axledistance").val(hiddenval).show();
+	} else {
+		hiddenval = $("#axledistance").val();
+		$("#axledistance").val(0).hide();
+	}
 });
 $("#generalform").submit(function(e){
 	e.preventDefault();
@@ -52,7 +58,6 @@ $("#axlegroupform").submit(function(e){
 	e.preventDefault();
 	var form = _.reduce($(this).serializeArray(),function(memo,val,key){ memo[val.name] = val.value; return memo;},{});
 	distances.push(+form.axledist);
-	console.log(distances);
 	var arr = rolast.findAxleGroupArray(distances);
 	$("#axlegroupresult").html( _.reduce(arr,function(str,axle){return str+rolast.printAxle(axle);},"") );
 });

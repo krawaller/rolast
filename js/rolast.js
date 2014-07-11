@@ -12,6 +12,88 @@ processTable = function(table){
 };
 
 window.rolast = {
+	calculations: {
+		maxLoad:
+			["subtract","DIFFERENSEN",
+				["min","MINSTABEGRÄNSNING",
+					["read","REGMAXVIKT","maxWeight"],
+					["filter","TABELLBRUTTOMAX","weightLimits"],
+					["filter","GENERELLGRÄNS","generalLimits"],
+					["sum","AXELSUMMA",
+						["each","groupedAxles",
+							["min","MINSTAAXELBEGRÄNSNING",
+								["filter","AXELMAX","axleLimits"],
+								["read","REGAXELMAX","weightLimit"]
+							]
+						]
+					]
+				],
+				["read","TJÄNSTEVIKT","serviceWeight"]
+			]
+	},
+	calculate: function(calc,data){
+		if (calc.result) { return calc; } // already processed!
+		var type = calc[0],
+			name = calc[1],
+			args = _.rest(calc,2),
+			obj = {type:type,name:name,def:calc};
+		if (args[0] && args[0][0] === "each"){
+			args = this.calculateeach(data[args[0][1]],args[0][2],data);
+		}
+		if (!this["calculate"+type]){
+			console.log("BAD CALC",calc,"data",data);
+			throw "Unknown calc type: "+type;
+		}
+		return _.extend(obj,this["calculate"+type]((args.length === 1 ? args[0] : args), data));
+	},
+	calculatesubtract: function(terms,data){
+		var subtractee = this.calculate(terms[0],data),
+			subtractor = this.calculate(terms[1],data);
+		return {
+			result: +(subtractee.result || 0) - +(subtractor.result||0),
+			subtractee: subtractee,
+			subtractor: subtractor
+		};
+	},
+	calculateeach: function(arr,calc,data){
+		return _.map(arr,function(el){
+			return this.calculate(calc,el);
+		},this);
+	},
+	calculateread: function(propname,data){
+		return {result: data[propname]};
+	},
+	calculatefilter: function(filtername,data){
+		var f = this.lookUpInList(this.lists[filtername],data);
+		return {result: f && f[1] || "---",filter:f && f[0],filtereddata:data};
+	},
+	calculatemin: function(calcs,data){
+		var deps = _.map(calcs,function(el){ return this.calculate(el,data); },this),
+			lowest = -1,
+			min = _.reduce(deps,function(memo,res,n){
+				if (res.result != "---" && res.result != undefined && res.result < memo){
+					lowest = n;
+					return res.result;
+				} else {
+					return memo;
+				}
+			},66666666,this);
+		return {
+			result: min === 66666666 ? "---" : min,
+			which: lowest,
+			mins: deps
+		};
+	},
+	calculatesum: function(calcs,data){
+		var deps = _.map(calcs,function(el){ return this.calculate(el,data); },this),
+			sum = _.reduce(deps,function(memo,res,n){
+				return memo + (res.result === "---" ? 0 : res.result);
+			},0,this);
+		return {
+			result: sum,
+			terms: deps
+		};
+	},
 	tables: {
 		weightBK1: processTable({
 			limits: [0,1,1.3,1.8,2.0,2.6,5.0,5.2,5.4,5.6,5.8,6.0,6.2,6.4,8.25,8.5,8.75,9.0,9.25,9.5,9.75,10,10.25,10.5,10.75,11.0,11.25,11.5,11.75,12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18],
@@ -26,7 +108,6 @@ window.rolast = {
 			data: [12,12.5,13,13.5,14,14.5,15,15.5,16,16.5,17,17.5,18,18.5,19,19.5,20,20.5,21,21.5,22,22.5,23,23.5,24,24.5,25,25.5,26,26.5,27,27.5,28,28.5,29,29.5,30,30.5,31,31.5,32,32.5,33,33.5,34,34.5,35,35.5,36,36.5,37,37.5],
 			flowstep: 0.2,
 			flowadd: 0.25
-			//calcMax: function(limit){ return 37.5+Math.floor((10*limit-220)/2)*0.25; }
 		})
 	},
 	lookUpInTable: function(table,limit){
@@ -99,7 +180,7 @@ window.rolast = {
 		var desc = "en "+(data.isPropulsionAxle === true ? "drivande " : data.isPropulsionAxle === false ? "ickedrivande " : ""),
 			kind = ["","axel ","boggie ","trippelaxel "][data.axles] || "",
 			susp = (data.hasGoodSuspension === true ? "med bra fjädring " : data.hasGoodSuspension === false ? "utan bra fjädring " : ""),
-			width = data.axleWidth ? (susp?" och":" med")+" bredd "+this.describeTestValue(data.axleWidth,"centimeter")+" " : "";
+			width = data.axleWidth ? (susp?" och":" med")+" bredd "+this.describeTestValue(data.axleWidth,"meter")+" " : "";
 		return desc+kind+susp+width;
 	},
 	describeTestValue: function(testval,unit,fixed){
@@ -119,7 +200,7 @@ window.rolast = {
 			dist = (data.totalAxleDistance ? (susp || axles ? " och " : " med axelavstånd ")+this.describeTestValue(data.totalAxleDistance,"meter") : "");
 		return type+susp+axles+dist;
 	},
-	lists: { // a listentry is [test,result,desc]
+	lists: { // a listentry is [test,result]
 		weightLimits: [
 			[{road: 1,hasEngine:false,totalAxleDistance:["between",6.6,6.8]},33],
 			[{road: 1,hasEngine:false,totalAxleDistance:["between",6.8,7]},34],
@@ -130,33 +211,33 @@ window.rolast = {
 			[{road: 3}, ["tablelookup","weightBK3","totalAxleDistance"] ]
 		],
 		generalLimits: [
-			[{road: 3}, "---","allroad3"],
+			[{road: 3}, "---"],
 			[{hasEngine:true,numberOfAxles:2}, 18],
-			[{road: 2}, "---","othersonroad2"],
+			[{road: 2}, "---"],
 			[{road: 1, numberOfAxles:3,isJointBus:true}, 28],
 			[{road: 1, hasEngine:true,numberOfAxles:3,hasGoodSuspension:true},26],
 			[{road: 1, hasEngine:true,numberOfAxles:3,hasGoodSuspension:false}, 25],
 			[{road: 1, hasEngine:true,numberOfAxles:["ormore",4],hasGoodSuspension:true}, 32],
 			[{road: 1, hasEngine:true,numberOfAxles:["ormore",4],hasGoodSuspension:false}, 31],
 			[{road: 1, hasEngine:false,totalAxleDistance:["ormore",7.2]}, 36], // trailer!
-			[{road: 1}, "---","othersonroad1"]
+			[{road: 1}, "---"]
 		],
 		axleLimits: [
 			[{road:1,axles:1,isPropulsionAxle:true},11.5],
 			[{road:1,axles:1,isPropulsionAxle:false},10],
 			[{road:2,axles:1},10],
 			[{road:3,axles:1},8],
-			[{axles:2,axleWidth:["lessthan",100]},11.5],
-			[{road:1,axles:2,axleWidth:["between",100,130]},16],
-			[{road:1,axles:2,axleWidth:["between",130,180],hasGoodSuspension:false},18],
-			[{road:1,axles:2,axleWidth:["between",130,180],hasGoodSuspension:true},19],
-			[{road:1,axles:2,axleWidth:["ormore",180]},20],
-			[{road:2,axles:2,axleWidth:["ormore",100]},16],
-			[{road:3,axles:2,axleWidth:["ormore",100]},12],
-			[{road:1,axles:3,axleWidth:["lessthan",260]},21],
-			[{road:1,axles:3,axleWidth:["ormore",260]},24],
-			[{road:2,axles:3,axleWidth:["lessthan",260]},20],
-			[{road:2,axles:3,axleWidth:["ormore",260]},22],
+			[{axles:2,axleWidth:["lessthan",1]},11.5],
+			[{road:1,axles:2,axleWidth:["between",1,1.3]},16],
+			[{road:1,axles:2,axleWidth:["between",1.3,1.8],hasGoodSuspension:false},18],
+			[{road:1,axles:2,axleWidth:["between",1.3,1.8],hasGoodSuspension:true},19],
+			[{road:1,axles:2,axleWidth:["ormore",1.8]},20],
+			[{road:2,axles:2,axleWidth:["ormore",1]},16],
+			[{road:3,axles:2,axleWidth:["ormore",1]},12],
+			[{road:1,axles:3,axleWidth:["lessthan",2.6]},21],
+			[{road:1,axles:3,axleWidth:["ormore",2.6]},24],
+			[{road:2,axles:3,axleWidth:["lessthan",2.6]},20],
+			[{road:2,axles:3,axleWidth:["ormore",2.6]},22],
 			[{road:3,axles:3},13],
 		],
 	},
@@ -179,18 +260,29 @@ window.rolast = {
 	processAxleGroup: function(data,axleobj,n,grouparr){
 		return _.extend(axleobj,{
 			hassGoodSuspension: data.hasGoodSuspension,
-			isPropulsionAxle: this.textAxleGroupPropulsion(data,axleobj.axles,n,grouparr),
+			isPropulsionAxle: this.testAxleGroupPropulsion(data,axleobj.axles,n,grouparr),
 			groupOrderNumber: n,
-			weightLimit: data.axleWeightLimits[n]
+			weightLimit: data.axleWeightLimits[n],
+			groupName: this.nameAxleGroup(data,axleobj,n,grouparr)
 		});
 	},
+	nameAxleGroup: function(data,axleobj,n,grouparr){
+		return ["FOOBAR","axeln","boggien","trippelaxeln"][axleobj.type]; // TODO - främre, bakre and shit
+	},
 	processAxleGroupArray: function(data,grouparr){
-		return _.map(grouparr,function(element,index){
+		return _.map(grouparr,function(axle,index){
 			return this.processAxleGroup(data,axle,index,grouparr);
 		},this);
 	},
-	calculateAxleGroups: function(data){
-		return this.processAxleGroupArray(data,this.findAxleGroupArray(data));
+	processData: function(data){
+		return _.extend({
+			groupedAxles: this.processAxleGroupArray(data,this.findAxleGroupArray(data.axleDistances)),
+			totalAxleDistance: _.reduce(data.axleDistances,function(mem,d){return mem+d;},0),
+			numberOfAxles: data.axleDistances.length+1,
+			hasEngine: !!data.hasEngine,
+			hasGoodSuspension: !!data.hasGoodSuspension,
+			isJointBus: !!data.isJointBus
+		},data);
 	},
 	printAxle: function(axle){
 		var desc = ["FOOBAR","axel","boggie","trippel"][axle.axles];
