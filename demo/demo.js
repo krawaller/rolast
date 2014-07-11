@@ -130,6 +130,7 @@ var examples = {
 		maxweights: "2",
 		serviceweight: 0.525,
 		maxweight: 2,
+		susp: false,
 		type: "trailer"
 	},
 	bwg831: {
@@ -137,6 +138,7 @@ var examples = {
 		maxweights: "0 0",
 		serviceweight: 2.99,
 		maxweight: 3.49,
+		susp: false,
 		type: "engine"
 	}
 };

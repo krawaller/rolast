@@ -50,11 +50,13 @@ window.rolast = {
 	},
 	printCalcResult: function(calcres,data,lvl){
 		if (!lvl) { lvl = 0;}
-		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+this.descriptions[calcres.name][0]+"</span> <span class='calcresult'>"+calcres.result+"</span>";
+		if (calcres.name === "MINSTAAXELBEGRAENSNING"){ console.log("Here we go, axleprint!","calcres",calcres,"data",data); }
+		if (calcres.name === "AXELMAX"){ console.log("Here we go, MAX!","calcres",calcres,"data",data); }
+		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+this.descriptions[calcres.name][0].replace("%NAME",(calcres.useddata||data).descriptionName)+"</span> <span class='calcresult'>"+calcres.result+"</span>";
 		if (calcres.type != "read"){
-			var desc = this.descriptions[calcres.name][1];
+			var desc = this.descriptions[calcres.name][1] && this.descriptions[calcres.name][1].replace("%NAME",(calcres.useddata||data).descriptionName);
 			str += "<button class='calczoomer'>visa</button>";
-			str += "<span class='calcdesc'>"+(this[desc] ? this[desc](calcres, calcres.filtereddata || data) : desc)+"</span>";
+			str += "<span class='calcdesc'>"+(this[desc] ? this[desc](calcres, calcres.useddata || data) : desc)+"</span>";
 			if (this["print"+calcres.type]) {
 				str += "<span class='calcdetails'>"+this["print"+calcres.type](calcres,data,lvl+1)+"</span>";
 			}
@@ -80,10 +82,10 @@ window.rolast = {
 		REGMAXVIKT: ["maxvikt från registreringsbevis"],
 		TABELLBRUTTOMAX: ["bruttomaxvikt","describeWeightLimit"],
 		GENERELLGRAENS: ["generell begränsning","describeGeneralLimit"],
-		AXELSUMMA: ["sammanlagd axelbelastning","Summan av axlarnas högsta tillåtna belastningar:"],
-		MINSTAAXELBEGRAENSNING: ["axelns maxbelastning","Den lägsta av axelns begränsningar:"],
-		AXELMAX: ["axelbegränsning enligt regler","describeAxleLimit"],
-		REGAXELMAX: ["axelbegränsning från registreringsbevis"],
+		AXELSUMMA: ["sammanlagd axelbelastning","Summan av axelgruppernas högsta tillåtna belastningar:"],
+		MINSTAAXELBEGRAENSNING: ["%NAMEs maxbelastning","Den lägsta av %NAMEs begränsningar:"],
+		AXELMAX: ["begränsning enligt regler","describeAxleLimit"],
+		REGAXELMAX: ["begränsning från registreringsbevis"],
 		TJAENSTEVIKT: ["tjänstevikt från registreringsbevis"]
 	},
 	calculations: {
@@ -110,7 +112,7 @@ window.rolast = {
 		var type = calc[0],
 			name = calc[1],
 			args = _.rest(calc,2),
-			obj = {type:type,name:name,def:calc};
+			obj = {type:type,name:name,def:calc,useddata:data};
 		if (args[0] && args[0][0] === "each"){
 			args = this.calculateeach(data[args[0][1]],args[0][2],data);
 		}
@@ -139,7 +141,7 @@ window.rolast = {
 	},
 	calculatefilter: function(filtername,data){
 		var f = this.lookUpInList(this.lists[filtername],data);
-		//if (filtername === "generalLimits"){ console.log("GENERAL LIMIT CALC","result",f && f[1],"catchfilter",f && f[0],"filtereddata",data); }
+		//if (filtername === "axleLimits"){ console.log("axle LIMIT CALC","result",f && f[1],"catchfilter",f && f[0],"filtereddata",data); }
 		return {result: f && f[1] || "---",filter:f && f[0],filtereddata:data};
 	},
 	calculatemin: function(calcs,data){
@@ -310,12 +312,12 @@ window.rolast = {
 			isPropulsionAxle: this.testAxleGroupPropulsion(data,axleobj.axles,n,grouparr),
 			groupOrderNumber: n,
 			weightLimit: data.axleWeightLimits[n],
-			groupName: this.nameAxleGroup(data,axleobj,n,grouparr),
+			descriptionName: this.nameAxleGroup(data,axleobj,n,grouparr),
 			road: data.road
 		});
 	},
 	nameAxleGroup: function(data,axleobj,n,grouparr){
-		return ["FOOBAR","axeln","boggien","trippelaxeln"][axleobj.type]; // TODO - främre, bakre and shit
+		return ["FOOBAR","axeln","boggien","trippelaxeln"][axleobj.axles]; // TODO - främre, bakre and shit
 	},
 	processAxleGroupArray: function(data,grouparr){
 		return _.map(grouparr,function(axle,index){
@@ -325,7 +327,7 @@ window.rolast = {
 	processData: function(data){
 		return _.extend({
 			groupedAxles: this.processAxleGroupArray(data,this.findAxleGroupArray(data.axleDistances)),
-			totalAxleDistance: _.reduce(data.axleDistances,function(mem,d){return mem+d;},0),
+			totalAxleDistance: _.reduce(data.axleDistances,function(mem,d){return (mem*1000+d*1000)/1000;},0),
 			numberOfAxles: data.axleDistances.length+1,
 			hasEngine: !!data.hasEngine,
 			hasGoodSuspension: !!data.hasGoodSuspension,
