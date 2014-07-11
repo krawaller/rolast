@@ -12,23 +12,97 @@ processTable = function(table){
 };
 
 window.rolast = {
+	describeAxle: function(data){
+		var desc = "en "+(data.isPropulsionAxle === true ? "drivande " : data.isPropulsionAxle === false ? "ickedrivande " : ""),
+			kind = ["","axel ","boggie ","trippelaxel "][data.axles] || "",
+			susp = (data.hasGoodSuspension === true ? "med bra fjädring " : data.hasGoodSuspension === false ? "utan bra fjädring " : ""),
+			width = data.axleWidth ? (susp?" och":" med")+" bredd "+this.describeTestValue(data.axleWidth,"meter")+" " : "";
+		return desc+kind+susp+width;
+	},
+	describeTestValue: function(testval,unit,fixed){
+		var more = fixed ? "fler" : "mer",
+			less = fixed ? "färre" : "mindre";
+		switch(testval[0]){
+			case "lessthan": return less+" än "+testval[1]+" "+unit;
+			case "between": return testval[1]+" "+unit+" eller "+more+" men "+less+" än "+testval[2]+" "+unit;
+			case "ormore": return testval[1]+" "+unit+" eller "+more+" ";
+			default: return testval+" "+unit;
+		}
+	},
+	describeVehicle: function(data){
+		var type = data.isJointBus ? "en ledbuss" : data.hasEngine ? "ett motordrivet fordon" : data.hasEngine === false ? "ett släp" : "ett fordon",
+			susp = (data.hasGoodSuspension === true ? " med bra fjädring " : data.hasGoodSuspension === false ? " utan bra fjädring " : ""),
+			axles = (data.numberOfAxles ? (susp ? " och " : " med ")+this.describeTestValue(data.numberOfAxles,"axlar",true) : ""),
+			dist = (data.totalAxleDistance ? (susp || axles ? " och " : " med totalt axelavstånd ")+this.describeTestValue(data.totalAxleDistance,"meter") : "");
+		return type+susp+axles+dist;
+	},
+	describeGeneralLimit: function(calcres,data){
+		return "På BK"+data.road+"-väg har "+(calcres.result == "---" ? "detta fordon ingen viktbegränsning" : this.describeVehicle(calcres.filter)+" maxvikten "+calcres.result+" ton")+". (sid 12 i häftet)";
+	},
+	describeWeightLimit: function(calcres,data){
+		return "På BK"+data.road+"-väg så är bruttomaxvikten "+calcres.result+" ton för "+this.describeVehicle(calcres.filter)+". (sid "+["foo",11,13,14][data.road]+" i häftet)";
+	},
+	describeAxleLimit: function(calcres,data){
+		if (!calcres.filter){
+			console.log("Oh no! Describing axle limit but we got no filter!",calcres,"data:",data)
+		}
+		return "På BK"+data.road+"-väg får "+this.describeAxle(calcres.filter)+" bära max "+calcres.result+" ton. (sid "+["foo",7,7,8][data.axles]+" i häftet)";
+	},
+	printCalcResult: function(calcres,data,lvl){
+		if (!lvl) { lvl = 0}
+		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+this.descriptions[calcres.name][0]+"</span> <span class='calcresult'>"+calcres.result+"</span>";
+		if (calcres.type != "read"){
+			var desc = this.descriptions[calcres.name][1];
+			str += "<button class='calczoomer'>visa</button>";
+			str += "<span class='calcdesc'>"+(this[desc] ? this[desc](calcres, calcres.filtereddata || data) : desc)+"</span>";
+			if (this["print"+calcres.type]) {
+				str += "<span class='calcdetails'>"+this["print"+calcres.type](calcres,data,lvl+1)+"</span>";
+			}
+		}
+		return str+"</span>";
+	},
+	printsubtract: function(calcres,data,lvl){
+		return this.printCalcResult(calcres.subtractee,data,lvl)+this.printCalcResult(calcres.subtractor,data,lvl);
+	},
+	printsum: function(calcres,data,lvl){
+		return _.reduce(calcres.terms,function(s,term){
+			return s+this.printCalcResult(term,data,lvl);
+		},"",this);
+	},
+	printmin: function(calcres,data,lvl){
+		return _.reduce(calcres.mins,function(s,part){
+			return s+this.printCalcResult(part,data,lvl);
+		},"",this);
+	},
+	descriptions: {
+		DIFFERENSEN: ["maximal lastvikt","Skillnaden mellan tillåten totalvikt och tjänstevikt:"],
+		MINSTABEGRAENSNING: ["tillåten totalvikt","Den lägsta av de olika begränsningarna:"],
+		REGMAXVIKT: ["maxvikt från registreringsbevis"],
+		TABELLBRUTTOMAX: ["bruttomaxvikt","describeWeightLimit"],
+		GENERELLGRAENS: ["generell begränsning","describeGeneralLimit"],
+		AXELSUMMA: ["sammanlagd axelbelastning","Summan av axlarnas högsta tillåtna belastningar:"],
+		MINSTAAXELBEGRAENSNING: ["maxbelastning","Den lägsta av axelns begränsningar:"],
+		AXELMAX: ["axelbegränsning enligt regler","describeAxleLimit"],
+		REGAXELMAX: ["axelbegränsning från registreringsbevis"],
+		TJAENSTEVIKT: ["tjänstevikt från registreringsbevis"]
+	},
 	calculations: {
 		maxLoad:
 			["subtract","DIFFERENSEN",
-				["min","MINSTABEGRÄNSNING",
+				["min","MINSTABEGRAENSNING",
 					["read","REGMAXVIKT","maxWeight"],
 					["filter","TABELLBRUTTOMAX","weightLimits"],
-					["filter","GENERELLGRÄNS","generalLimits"],
+					["filter","GENERELLGRAENS","generalLimits"],
 					["sum","AXELSUMMA",
 						["each","groupedAxles",
-							["min","MINSTAAXELBEGRÄNSNING",
+							["min","MINSTAAXELBEGRAENSNING",
 								["filter","AXELMAX","axleLimits"],
 								["read","REGAXELMAX","weightLimit"]
 							]
 						]
 					]
 				],
-				["read","TJÄNSTEVIKT","serviceWeight"]
+				["read","TJAENSTEVIKT","serviceWeight"]
 			]
 	},
 	calculate: function(calc,data){
@@ -65,13 +139,16 @@ window.rolast = {
 	},
 	calculatefilter: function(filtername,data){
 		var f = this.lookUpInList(this.lists[filtername],data);
+		if (filtername === "generalLimits"){
+			console.log("GENERAL LIMIT CALC","result",f && f[1],"catchfilter",f && f[0],"filtereddata",data);
+		}
 		return {result: f && f[1] || "---",filter:f && f[0],filtereddata:data};
 	},
 	calculatemin: function(calcs,data){
 		var deps = _.map(calcs,function(el){ return this.calculate(el,data); },this),
 			lowest = -1,
 			min = _.reduce(deps,function(memo,res,n){
-				if (res.result != "---" && res.result != undefined && res.result < memo){
+				if (res.result !== "---" && res.result !== undefined && res.result < memo){
 					lowest = n;
 					return res.result;
 				} else {
@@ -127,7 +204,6 @@ window.rolast = {
 			}
 		} else {
 			var n = _.find(table.range,function(n){return limit >= table.limits[n] && limit < table.limits[n+1];});
-			console.log("Table between value. n",n);
 			return [["between",table.limits[n],table.limits[n+1]],table.data[n]];
 		}
 	},
@@ -137,20 +213,20 @@ window.rolast = {
 		})];
 	},
 	matchValue: function(against,val){
-		console.log(" ... MATCHVALUE ",val,"against",against,"type",against[0]);
+		//console.log(" ... MATCHVALUE ",val,"against",against,"type",against[0]);
 		switch(against[0]){
 			case "ormore":
 				//console.log(" ... MATCHVALUE ",val,"against",against,"result",val >= against[1]);
 				return val >= against[1];
 			case "lessthan":
-				console.log(" ... MATCHVALUE ",val,"against",against,"result",val < against[1]);
+				//console.log(" ... MATCHVALUE ",val,"against",against,"result",val < against[1]);
 				return val < against[1];
 			case "between": return val >= against[1] && val < against[2];
 			default: return val === against;
 		}
 	},
 	performMatch: function(match,data){
-		console.log("matching",match,"against",data);
+		//console.log("matching",match,"against",data);
 		return _.reduce(match,function(memo,testpropval,testpropname){
 			return memo && this.matchValue(testpropval,data[testpropname]);
 		},true,this);
@@ -158,47 +234,20 @@ window.rolast = {
 	lookUpInList: function(list,data){
 		var lookup = _.find(list,function(listentry){return this.performMatch(listentry[0],data);},this); // now we have a listentry or nothing
 		return lookup && this.processListResult(lookup,data);
-		//return lookup && [lookup[0],this.processListResult(lookup[1],data)] || [];
 	},
 	processListResult: function(listentry,data){
 		var match = listentry[0], result =  _.ensureArray(listentry[1]);
 		result = _.ensureArray(result);
 		switch(result[0]){ // result is [instruction,arg1,arg2] or just [value]
 			case "tablelookup": // [tablelookup,tablename,datapropname]
-				console.log("table lookup");
 				var tablename = result[1], propname = result[2],
 					tablelookup = this.lookUpInTable(this.tables[tablename],data[propname]),
 					betweencondition = tablelookup[0],
 					answer = tablelookup[1];
 				return [_.extend({},match,_.object([propname],[betweencondition])),answer];
 			default:
-				console.log("noprocess result",result);
 				return listentry;
 		}
-	},
-	describeAxle: function(data){
-		var desc = "en "+(data.isPropulsionAxle === true ? "drivande " : data.isPropulsionAxle === false ? "ickedrivande " : ""),
-			kind = ["","axel ","boggie ","trippelaxel "][data.axles] || "",
-			susp = (data.hasGoodSuspension === true ? "med bra fjädring " : data.hasGoodSuspension === false ? "utan bra fjädring " : ""),
-			width = data.axleWidth ? (susp?" och":" med")+" bredd "+this.describeTestValue(data.axleWidth,"meter")+" " : "";
-		return desc+kind+susp+width;
-	},
-	describeTestValue: function(testval,unit,fixed){
-		var more = fixed ? "fler" : "mer",
-			less = fixed ? "färre" : "mindre";
-		switch(testval[0]){
-			case "lessthan": return less+" än "+testval[1]+" "+unit;
-			case "between": return testval[1]+" "+unit+" eller "+more+" men "+less+" än "+testval[2]+" "+unit;
-			case "ormore": return testval[1]+" "+unit+" eller "+more+" ";
-			default: return testval+" "+unit;
-		}
-	},
-	describeVehicle: function(data){
-		var type = data.isJointBus ? "en ledbuss" : data.hasEngine ? "ett motordrivet fordon" : data.hasEngine === false ? "ett släp" : "ett fordon",
-			susp = (data.hasGoodSuspension === true ? " med bra fjädring " : data.hasGoodSuspension === false ? " utan bra fjädring " : ""),
-			axles = (data.numberOfAxles ? (susp ? " och " : " med ")+this.describeTestValue(data.numberOfAxles,"axlar",true) : ""),
-			dist = (data.totalAxleDistance ? (susp || axles ? " och " : " med axelavstånd ")+this.describeTestValue(data.totalAxleDistance,"meter") : "");
-		return type+susp+axles+dist;
 	},
 	lists: { // a listentry is [test,result]
 		weightLimits: [
@@ -255,15 +304,16 @@ window.rolast = {
 		return arr;
 	},
 	testAxleGroupPropulsion: function(data,type,n,grouparr){
-		return data.hasEngine && n === grouparr.length-1; // how to do this? :P
+		return !!(data.hasEngine && n === grouparr.length-1); // how to do this? :P
 	},
 	processAxleGroup: function(data,axleobj,n,grouparr){
 		return _.extend(axleobj,{
-			hassGoodSuspension: data.hasGoodSuspension,
+			hasGoodSuspension: !!data.hasGoodSuspension,
 			isPropulsionAxle: this.testAxleGroupPropulsion(data,axleobj.axles,n,grouparr),
 			groupOrderNumber: n,
 			weightLimit: data.axleWeightLimits[n],
-			groupName: this.nameAxleGroup(data,axleobj,n,grouparr)
+			groupName: this.nameAxleGroup(data,axleobj,n,grouparr),
+			road: data.road
 		});
 	},
 	nameAxleGroup: function(data,axleobj,n,grouparr){
@@ -284,7 +334,7 @@ window.rolast = {
 			isJointBus: !!data.isJointBus
 		},data);
 	},
-	printAxle: function(axle){
+	drawAxle: function(axle){
 		var desc = ["FOOBAR","axel","boggie","trippel"][axle.axles];
 		return "<span class='axle axle-"+desc+"'><span class='axledesc'>"+desc+"</span>"+(axle.axles!=1?"<span class='axlewidth'>"+axle.axleWidth+"m</span>":"")+"</span>"+(axle.distanceToNext ? "<span class='axledistancetonext'>"+axle.distanceToNext+"m</span>":"");
 	}
