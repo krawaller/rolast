@@ -116,12 +116,25 @@ $("#exampleone").click(function(e){
 	e.preventDefault();
 	$(e.target).blur();
 });
+$("#exampletya").click(function(e){
+	fillform({
+		distances: "4.7 1.35",
+		maxweights: "8 19",
+		serviceweight: 13.23,
+		maxweight: 26,
+		susp: true,
+		type: "engine"
+	});
+	e.preventDefault();
+	$(e.target).blur();
+});
 $("body").on("click",".calczoomer",function(e){
 	e.preventDefault();
 	$(e.target).text($(e.target).text()==="visa"?"dölj":"visa").closest(".calcprint").toggleClass("zoomed");
 });
 $("#totalform").on("reset",function(e){
 	$("#totalresult").empty();
+	$("#totalaxleresult").empty();
 });
 $("#totalform").submit(function(e){
 	e.preventDefault();

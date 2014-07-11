@@ -49,7 +49,7 @@ window.rolast = {
 		return "På BK"+data.road+"-väg får "+this.describeAxle(calcres.filter)+" bära max "+calcres.result+" ton. (sid "+["foo",7,7,8][data.axles]+" i häftet)";
 	},
 	printCalcResult: function(calcres,data,lvl){
-		if (!lvl) { lvl = 0;}
+		if (!lvl) { lvl = 0;}
 		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+this.descriptions[calcres.name][0]+"</span> <span class='calcresult'>"+calcres.result+"</span>";
 		if (calcres.type != "read"){
 			var desc = this.descriptions[calcres.name][1];
@@ -333,7 +333,6 @@ window.rolast = {
 		},data);
 	},
 	drawAxle: function(axle){
-		console.log("DRAWING AXLE",axle)
 		var desc = ["FOOBAR","axel","boggie","trippel"][axle.axles],
 			width = (axle.axles!=1?"<span class='axlewidth'>"+axle.axleWidth+"m</span>":""),
 			weight = (axle.weightLimit?"<span class='axlemax'>"+axle.weightLimit+"ton</span>":""),
