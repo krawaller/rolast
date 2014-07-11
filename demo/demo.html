@@ -87,10 +87,12 @@ Detta är en testsida för de olika delfunktionerna i Rolands lastapp, med arbet
 			<fieldset>
 				<legend>Totaltest! Woo!</legend>
 				<p class='totalexamples'>
-					<button id='exampleone' type="button">lastbilsteori.se exempel 1</button>
-					<button id='exampletwo' type="button">lastbilsteori.se exempel 2</button>
-					<button id='exampletya' type="button">exempel från TYA powerpoint</button>
-					<span>(<a href="http://www.lastbilsteori.se/lastvikt.html">http://www.lastbilsteori.se/lastvikt.html</a>)</span>
+					<button type="button" data-example='lastbilsteori1'>lastbilsteori.se exempel 1</button>
+					<button type="button" data-example='lastbilsteori2'>lastbilsteori.se exempel 2</button>
+					<button type="button" data-example='tyapowerpoint'>exempel från TYA powerpoint</button>
+					<button type="button" data-example='kbj016'>lastbil KBJ016</button>
+					<button type="button" data-example='dxl116'>släp DXL116</button>
+					<button type="button" data-example='bwg831'>personbil BWG831</button>
 				</p>
 				<select name="road">
 		  			<option value="1" selected>BK1</option> 
@@ -105,7 +107,7 @@ Detta är en testsida för de olika delfunktionerna i Rolands lastapp, med arbet
 				<label><input type="checkbox" name="susp" value="susp">Bra fjädring</label>
 				<input class='widetext' type='text' name="distances" placeholder="axelavstånd separerade med mellanslag" required />
 				<input class='widetext' type='text' name="maxweights" placeholder="axelmaxvikt separerade med mellanslag" required />
-				<input type="number" placeholder="tjänstevikt i ton" name="serviceweight" min="0.1" max="1000" step="0.01" required />
+				<input type="number" placeholder="tjänstevikt i ton" name="serviceweight" min="0.001" max="1000" step="0.001" required />
 				<input type="number" placeholder="maxvikt i ton" name="maxweight" min="0.1" max="1000" step="0.01" required />
 				<button type="submit">Beräkna!</button>
 				<button type="reset">Rensa</button>

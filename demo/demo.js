@@ -92,39 +92,56 @@ var fillform = function(obj){
 		}
 	});
 };
-$("#exampletwo").click(function(e){
-	fillform({
-		distances: "4.8 1.38",
-		maxweights: "9 18",
-		serviceweight: 10.8,
-		maxweight: 26,
-		susp: true,
-		type: "engine"
-	});
-	e.preventDefault();
-	$(e.target).blur();
-});
-$("#exampleone").click(function(e){
-	fillform({
+var examples = {
+	lastbilsteori1: {
 		distances: "5.7",
 		maxweights: "7.5 15.5",
 		serviceweight: 10.4,
 		maxweight: 23,
 		susp: true,
 		type: "engine"
-	});
-	e.preventDefault();
-	$(e.target).blur();
-});
-$("#exampletya").click(function(e){
-	fillform({
+	},
+	lastbilsteori2: {
+		distances: "4.8 1.38",
+		maxweights: "9 18",
+		serviceweight: 10.8,
+		maxweight: 26,
+		susp: true,
+		type: "engine"
+	},
+	tyapowerpoint: {
 		distances: "4.7 1.35",
 		maxweights: "8 19",
 		serviceweight: 13.23,
 		maxweight: 26,
 		susp: true,
 		type: "engine"
-	});
+	},
+	kbj016: {
+		distances: "4.6 1.32",
+		maxweights: "8 20",
+		serviceweight: 11.89,
+		maxweight: 25,
+		susp: false,
+		type: "engine"
+	},
+	dxl116: {
+		distances: "0.72",
+		maxweights: "2",
+		serviceweight: 0.525,
+		maxweight: 2,
+		type: "trailer"
+	},
+	bwg831: {
+		distances: "4.035",
+		maxweights: "0 0",
+		serviceweight: 2.99,
+		maxweight: 3.49,
+		type: "engine"
+	}
+};
+$(".totalexamples button").click(function(e){
+	fillform(examples[$(this).attr('data-example')]);
 	e.preventDefault();
 	$(e.target).blur();
 });
@@ -150,7 +167,7 @@ $("#totalform").submit(function(e){
 			hasGoodSuspension: !!form.susp,
 		},
 		pdata = rolast.processData(data);
-	if (pdata.groupedAxles.length != pdata.axleWeightLimits.length){
+	if (pdata.axleWeightLimits.length > 0 && pdata.groupedAxles.length != pdata.axleWeightLimits.length){
 		$("#totalresult").html("Efter gruppering har vi "+pdata.groupedAxles.length+" axlar, men maxgränserna innehöll "+pdata.axleWeightLimits.length+" värden! De måste vara samma antal!");
 	} else {
 		var result = rolast.calculate( rolast.calculations.maxLoad, pdata );

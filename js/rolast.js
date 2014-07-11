@@ -81,7 +81,7 @@ window.rolast = {
 		TABELLBRUTTOMAX: ["bruttomaxvikt","describeWeightLimit"],
 		GENERELLGRAENS: ["generell begränsning","describeGeneralLimit"],
 		AXELSUMMA: ["sammanlagd axelbelastning","Summan av axlarnas högsta tillåtna belastningar:"],
-		MINSTAAXELBEGRAENSNING: ["maxbelastning","Den lägsta av axelns begränsningar:"],
+		MINSTAAXELBEGRAENSNING: ["axelns maxbelastning","Den lägsta av axelns begränsningar:"],
 		AXELMAX: ["axelbegränsning enligt regler","describeAxleLimit"],
 		REGAXELMAX: ["axelbegränsning från registreringsbevis"],
 		TJAENSTEVIKT: ["tjänstevikt från registreringsbevis"]
@@ -106,7 +106,7 @@ window.rolast = {
 			]
 	},
 	calculate: function(calc,data){
-		if (calc.result) { return calc; } // already processed!
+		if (calc.hasOwnProperty("result")) { return calc; } // already processed!
 		var type = calc[0],
 			name = calc[1],
 			args = _.rest(calc,2),
@@ -118,7 +118,7 @@ window.rolast = {
 			console.log("BAD CALC",calc,"data",data);
 			throw "Unknown calc type: "+type;
 		}
-		return _.extend(obj,this["calculate"+type]((args.length === 1 ? args[0] : args), data));
+		return _.extend(obj,this["calculate"+type]((args.length === 1 && (type !== "sum") ? args[0] : args), data));
 	},
 	calculatesubtract: function(terms,data){
 		var subtractee = this.calculate(terms[0],data),
@@ -135,7 +135,7 @@ window.rolast = {
 		},this);
 	},
 	calculateread: function(propname,data){
-		return {result: data[propname]};
+		return {result: data[propname] || "---"};
 	},
 	calculatefilter: function(filtername,data){
 		var f = this.lookUpInList(this.lists[filtername],data);
@@ -164,7 +164,7 @@ window.rolast = {
 			sum = _.reduce(deps,function(memo,res,n){
 				return (memo*1000 + (res.result === "---" ? 0 : res.result)*1000)/1000;
 			},0,this);
-		return {
+		return deps.length === 1 ? deps[0] : {
 			result: sum,
 			terms: deps
 		};
