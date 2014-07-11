@@ -82,11 +82,11 @@ input[type="text"], input.wide {
 	margin-left:1em;
 }
 
-#totalresult:after {
+#totalresult:after, #totalaxleresult:after {
 	content: " ";
 	clear: both;
 	display: block;
-	height: 3em;
+	height: 1px;
 }
 #totalaxleresult {
 	font-size: 0.8em;
