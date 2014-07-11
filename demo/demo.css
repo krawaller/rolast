@@ -36,7 +36,7 @@ input[type="text"], input.wide {
 }
 
 .axledesc {
-	margin-top: 10px;
+	margin-top: 2px;
 }
 
 .calcprint {
@@ -78,8 +78,8 @@ input[type="text"], input.wide {
 	display: block;
 }
 
-.calczoomer.active {
-	font-weight: bold;
+.calczoomer {
+	margin-left:1em;
 }
 
 #totalresult:after {
@@ -88,9 +88,15 @@ input[type="text"], input.wide {
 	display: block;
 	height: 3em;
 }
+#totalaxleresult {
+	font-size: 0.8em;
+}
 
 .totalexamples {
 	background-color: #DDD;
+}
+.totalexamples > span {
+	font-size: 0.86em;
 }
 .totalexamples > button {
 	margin: 3px;

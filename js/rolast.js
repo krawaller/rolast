@@ -44,12 +44,12 @@ window.rolast = {
 	},
 	describeAxleLimit: function(calcres,data){
 		if (!calcres.filter){
-			console.log("Oh no! Describing axle limit but we got no filter!",calcres,"data:",data)
+			console.log("Oh no! Describing axle limit but we got no filter!",calcres,"data:",data);
 		}
 		return "På BK"+data.road+"-väg får "+this.describeAxle(calcres.filter)+" bära max "+calcres.result+" ton. (sid "+["foo",7,7,8][data.axles]+" i häftet)";
 	},
 	printCalcResult: function(calcres,data,lvl){
-		if (!lvl) { lvl = 0}
+		if (!lvl) { lvl = 0;}
 		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+this.descriptions[calcres.name][0]+"</span> <span class='calcresult'>"+calcres.result+"</span>";
 		if (calcres.type != "read"){
 			var desc = this.descriptions[calcres.name][1];
@@ -124,7 +124,7 @@ window.rolast = {
 		var subtractee = this.calculate(terms[0],data),
 			subtractor = this.calculate(terms[1],data);
 		return {
-			result: +(subtractee.result || 0) - +(subtractor.result||0),
+			result: (+(subtractee.result || 0)*1000 - +(subtractor.result||0)*1000)/1000,
 			subtractee: subtractee,
 			subtractor: subtractor
 		};
@@ -139,9 +139,7 @@ window.rolast = {
 	},
 	calculatefilter: function(filtername,data){
 		var f = this.lookUpInList(this.lists[filtername],data);
-		if (filtername === "generalLimits"){
-			console.log("GENERAL LIMIT CALC","result",f && f[1],"catchfilter",f && f[0],"filtereddata",data);
-		}
+		//if (filtername === "generalLimits"){ console.log("GENERAL LIMIT CALC","result",f && f[1],"catchfilter",f && f[0],"filtereddata",data); }
 		return {result: f && f[1] || "---",filter:f && f[0],filtereddata:data};
 	},
 	calculatemin: function(calcs,data){
@@ -164,7 +162,7 @@ window.rolast = {
 	calculatesum: function(calcs,data){
 		var deps = _.map(calcs,function(el){ return this.calculate(el,data); },this),
 			sum = _.reduce(deps,function(memo,res,n){
-				return memo + (res.result === "---" ? 0 : res.result);
+				return (memo*1000 + (res.result === "---" ? 0 : res.result)*1000)/1000;
 			},0,this);
 		return {
 			result: sum,
@@ -335,8 +333,12 @@ window.rolast = {
 		},data);
 	},
 	drawAxle: function(axle){
-		var desc = ["FOOBAR","axel","boggie","trippel"][axle.axles];
-		return "<span class='axle axle-"+desc+"'><span class='axledesc'>"+desc+"</span>"+(axle.axles!=1?"<span class='axlewidth'>"+axle.axleWidth+"m</span>":"")+"</span>"+(axle.distanceToNext ? "<span class='axledistancetonext'>"+axle.distanceToNext+"m</span>":"");
+		console.log("DRAWING AXLE",axle)
+		var desc = ["FOOBAR","axel","boggie","trippel"][axle.axles],
+			width = (axle.axles!=1?"<span class='axlewidth'>"+axle.axleWidth+"m</span>":""),
+			weight = (axle.weightLimit?"<span class='axlemax'>"+axle.weightLimit+"ton</span>":""),
+			dist = (axle.distanceToNext ? "<span class='axledistancetonext'>"+axle.distanceToNext+"m</span>":"");
+		return "<span class='axle axle-"+desc+"'><span class='axledesc'>"+desc+"</span>"+width+weight+"</span>"+dist;
 	}
 };
 

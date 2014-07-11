@@ -92,12 +92,24 @@ var fillform = function(obj){
 		}
 	});
 };
-$("#exampleone").click(function(e){
+$("#exampletwo").click(function(e){
 	fillform({
 		distances: "4.8 1.38",
 		maxweights: "9 18",
 		serviceweight: 10.8,
 		maxweight: 26,
+		susp: true,
+		type: "engine"
+	});
+	e.preventDefault();
+	$(e.target).blur();
+});
+$("#exampleone").click(function(e){
+	fillform({
+		distances: "5.7",
+		maxweights: "7.5 15.5",
+		serviceweight: 10.4,
+		maxweight: 23,
 		susp: true,
 		type: "engine"
 	});
@@ -130,6 +142,7 @@ $("#totalform").submit(function(e){
 	} else {
 		var result = rolast.calculate( rolast.calculations.maxLoad, pdata );
 		$("#totalresult").html(rolast.printCalcResult(result,pdata));
+		$("#totalaxleresult").html( _.reduce(pdata.groupedAxles,function(str,axle){return str+rolast.drawAxle(axle);},"") );
 	}
 });
 
