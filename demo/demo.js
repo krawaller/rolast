@@ -178,4 +178,3 @@ $("#totalform").submit(function(e){
 	}
 });
 
-
