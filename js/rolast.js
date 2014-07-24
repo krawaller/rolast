@@ -37,7 +37,7 @@ window.rolast = {
 		return type+susp+axles+dist;
 	},
 	describeGeneralLimit: function(calcres,data){
-		return "På BK"+data.road+"-väg har "+(calcres.result == "---" ? "detta fordon ingen viktbegränsning" : this.describeVehicle(calcres.filter)+" maxvikten "+calcres.result+" ton")+". (sid 12 i häftet)";
+		return "På BK"+data.road+"-väg har "+(calcres.result == "---" ? "detta fordon ingen allmän viktbegränsning" : this.describeVehicle(calcres.filter)+" maxvikten "+calcres.result+" ton")+". (sid 12 i häftet)";
 	},
 	describeWeightLimit: function(calcres,data){
 		return "På BK"+data.road+"-väg så är bruttomaxvikten "+calcres.result+" ton för "+this.describeVehicle(calcres.filter)+". (sid "+["foo",11,13,14][data.road]+" i häftet)";
@@ -50,65 +50,101 @@ window.rolast = {
 	},
 	printCalcResult: function(calcres,data,lvl){
 		if (!lvl) { lvl = 0;}
-		if (calcres.name === "MINSTAAXELBEGRAENSNING"){ console.log("Here we go, axleprint!","calcres",calcres,"data",data); }
-		if (calcres.name === "AXELMAX"){ console.log("Here we go, MAX!","calcres",calcres,"data",data); }
-		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+this.descriptions[calcres.name][0].replace("%NAME",(calcres.useddata||data).descriptionName)+"</span> <span class='calcresult'>"+calcres.result+"</span>";
+		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+calcres.title+"</span> <span class='calcresult'>"+calcres.result+"</span>";
 		if (calcres.type != "read"){
-			var desc = this.descriptions[calcres.name][1] && this.descriptions[calcres.name][1].replace("%NAME",(calcres.useddata||data).descriptionName);
 			str += "<button class='calczoomer'>visa</button>";
-			str += "<span class='calcdesc'>"+(this[desc] ? this[desc](calcres, calcres.useddata || data) : desc)+"</span>";
-			if (this["print"+calcres.type]) {
-				str += "<span class='calcdetails'>"+this["print"+calcres.type](calcres,data,lvl+1)+"</span>";
-			}
+			str += "<span class='calcdesc'>"+calcres.desc+"</span>";
+			str += _.reduce(calcres.used || [],function(s,part){
+				return s+"<span class='calcdetails'>"+this.printCalcResult(part,data,lvl+1)+"</span>";
+			},"",this);
 		}
 		return str+"</span>";
 	},
-	printsubtract: function(calcres,data,lvl){
-		return this.printCalcResult(calcres.subtractee,data,lvl)+this.printCalcResult(calcres.subtractor,data,lvl);
-	},
-	printsum: function(calcres,data,lvl){
-		return _.reduce(calcres.terms,function(s,term){
-			return s+this.printCalcResult(term,data,lvl);
-		},"",this);
-	},
-	printmin: function(calcres,data,lvl){
-		return _.reduce(calcres.mins,function(s,part){
-			return s+this.printCalcResult(part,data,lvl);
-		},"",this);
+	describe: function(res,data){
+		if (!this.descriptions[res.name]){
+			throw "Unknown description name: "+res.name;
+		}
+		var name = res.name,
+			title = this.descriptions[name][0].replace("%NAME",(res.useddata||data).descriptionName),
+			desc = (this.descriptions[name][1] || "").replace("%NAME",(res.useddata||data).descriptionName);
+		return _.extend(res,{
+			title: title,
+			desc: this[desc] ? this[desc](res,data) : desc
+		});
 	},
 	descriptions: {
 		DIFFERENSEN: ["maximal lastvikt","Skillnaden mellan tillåten totalvikt och tjänstevikt:"],
 		MINSTABEGRAENSNING: ["tillåten totalvikt","Den lägsta av de olika begränsningarna:"],
 		REGMAXVIKT: ["maxvikt från registreringsbevis"],
 		TABELLBRUTTOMAX: ["bruttomaxvikt","describeWeightLimit"],
-		GENERELLGRAENS: ["generell begränsning","describeGeneralLimit"],
+		GENERELLGRAENS: ["allmän begränsning","describeGeneralLimit"],
 		AXELSUMMA: ["sammanlagd axelbelastning","Summan av axelgruppernas högsta tillåtna belastningar:"],
 		MINSTAAXELBEGRAENSNING: ["%NAMEs maxbelastning","Den lägsta av %NAMEs begränsningar:"],
 		AXELMAX: ["begränsning enligt regler","describeAxleLimit"],
 		REGAXELMAX: ["begränsning från registreringsbevis"],
-		TJAENSTEVIKT: ["tjänstevikt från registreringsbevis"]
+		TJAENSTEVIKT: ["tjänstevikt från registreringsbevis"],
+		// tåågskit
+		TAAGVIKT: ["fordonstågets maximala vikt","Fordonstågets maxvikt är den minsta av tabellslagning av fordonståget som helhet och summan av delarnas maxvikter:"],
+		TAAGTJAENSTEVIKT: ["fordonstågets tjänstevikt","Tjänstevikten för fordonståget är summan av delarnas tjänstevikter:"],
+		DRAGBILVIKT: ["dragbilens tjänstevikt"],
+		SLAEPVIKT: ["släpets tjänstevikt"],
+		DRAGBILMAX: ["dragbilens största tillåtna vikt"],
+		SLAEPMAX: ["släpets största tillåtna vikt"],
+		TAAGTABELLBRUTTOMAX: ["Tågets maxvikt enligt tabell","describeWeightLimit"],
+		LOKPLUSSLAEP: ["Lokets och släpets maxvikter"]
+
 	},
 	calculations: {
-		maxLoad:
+		maxTrainLoad:
 			["subtract","DIFFERENSEN",
-				["min","MINSTABEGRAENSNING",
-					["read","REGMAXVIKT","maxWeight"],
-					["filter","TABELLBRUTTOMAX","weightLimits"],
-					["filter","GENERELLGRAENS","generalLimits"],
-					["sum","AXELSUMMA",
-						["each","groupedAxles",
-							["min","MINSTAAXELBEGRAENSNING",
-								["filter","AXELMAX","axleLimits"],
-								["read","REGAXELMAX","weightLimit"]
-							]
+				["calc","maxTrainWeight"],
+				["sum","TAAGTJAENSTEVIKT",
+					["for","engine","read","DRAGBILVIKT","serviceWeight"],
+					["for","trailer","read","SLAEPVIKT","serviceWeight"]
+				],
+			],
+		maxTrainWeight:
+			["min","TAAGVIKT",
+				["filter","TAAGTABELLBRUTTOMAX","weightLimits"],
+				["sum","LOKPLUSSLAEP",
+					["for","engine","calc","maxVehicleWeight","DRAGBILMAX"],
+					["for","trailer","calc","maxVehicleWeight","SLAEPMAX"]
+				]
+			],
+		maxVehicleWeight:
+			["min","MINSTABEGRAENSNING",
+				["read","REGMAXVIKT","maxWeight"],
+				["filter","TABELLBRUTTOMAX","weightLimits"],
+				["filter","GENERELLGRAENS","generalLimits"],
+				["sum","AXELSUMMA",
+					["each","groupedAxles",
+						["min","MINSTAAXELBEGRAENSNING",
+							["filter","AXELMAX","axleLimits"],
+							["read","REGAXELMAX","weightLimit"]
 						]
 					]
-				],
+				]
+			],
+		maxVehicleLoad:
+			["subtract","DIFFERENSEN",
+				["calc","maxVehicleWeight"],
 				["read","TJAENSTEVIKT","serviceWeight"]
 			]
 	},
 	calculate: function(calc,data){
 		if (calc.hasOwnProperty("result")) { return calc; } // already processed!
+		if (calc[0] === "for") {
+			data = data[calc[1]];
+			calc = _.rest(calc,2);
+		}
+		if (calc[0] === "calc") {
+			calcresult = this.calculate(this.calculations[calc[1]],data);
+			if (calc[2]){
+				calcresult.name = calc[2];
+				return this.describe(calcresult);
+			}
+			return calcresult;
+		}
 		var type = calc[0],
 			name = calc[1],
 			args = _.rest(calc,2),
@@ -120,15 +156,14 @@ window.rolast = {
 			console.log("BAD CALC",calc,"data",data);
 			throw "Unknown calc type: "+type;
 		}
-		return _.extend(obj,this["calculate"+type]((args.length === 1 && (type !== "sum") ? args[0] : args), data));
+		return this.describe(_.extend(obj,this["calculate"+type]((args.length === 1 && (type !== "sum") ? args[0] : args), data)),data);
 	},
 	calculatesubtract: function(terms,data){
 		var subtractee = this.calculate(terms[0],data),
 			subtractor = this.calculate(terms[1],data);
 		return {
 			result: (+(subtractee.result || 0)*1000 - +(subtractor.result||0)*1000)/1000,
-			subtractee: subtractee,
-			subtractor: subtractor
+			used: [subtractee,subtractor]
 		};
 	},
 	calculateeach: function(arr,calc,data){
@@ -142,7 +177,12 @@ window.rolast = {
 	calculatefilter: function(filtername,data){
 		var f = this.lookUpInList(this.lists[filtername],data);
 		//if (filtername === "axleLimits"){ console.log("axle LIMIT CALC","result",f && f[1],"catchfilter",f && f[0],"filtereddata",data); }
-		return {result: f && f[1] || "---",filter:f && f[0],filtereddata:data};
+		return {
+			result: f && f[1] || "---",
+			filter:f && f[0],
+			filtereddata:data,
+			useddata:data
+		};
 	},
 	calculatemin: function(calcs,data){
 		var deps = _.map(calcs,function(el){ return this.calculate(el,data); },this),
@@ -158,7 +198,7 @@ window.rolast = {
 		return {
 			result: min === 66666666 ? "---" : min,
 			which: lowest,
-			mins: deps
+			used: deps
 		};
 	},
 	calculatesum: function(calcs,data){
@@ -168,7 +208,7 @@ window.rolast = {
 			},0,this);
 		return deps.length === 1 ? deps[0] : {
 			result: sum,
-			terms: deps
+			used: deps
 		};
 	},
 	tables: {
@@ -187,46 +227,33 @@ window.rolast = {
 			flowadd: 0.25
 		})
 	},
+	tableOverflow: function(table,limit){
+		var overflow = (limit*10-table.maxlimit*10)/10,
+			numstepsover = Math.floor((10*(overflow))/(10*table.flowstep)),
+			lower = (table.maxlimit*10+numstepsover*table.flowstep*10)/10,
+			higher = (lower*10+table.flowstep*10)/10,
+			val = table.maxdata+numstepsover*table.flowadd;
+		return [["between",lower,higher],val];
+	},
 	lookUpInTable: function(table,limit){
 		if (limit < table.minlimit){
 			return [["lessthan",table.minlimit],table.mindata];
 		} else if (limit >= table.maxlimit) {
-			if (table.flowstep) {
-				var overflow = (limit*10-table.maxlimit*10)/10,
-					numstepsover = Math.floor((10*(overflow))/(10*table.flowstep)),
-					lower = (table.maxlimit*10+numstepsover*table.flowstep*10)/10,
-					higher = (lower*10+table.flowstep*10)/10,
-					val = table.maxdata+numstepsover*table.flowadd;
-				console.log("input",limit,"tablemax",table.maxlimit,"overflow",overflow,"stepsize",table.flowstep,"numstepsover",numstepsover,"lower",lower,"higher",higher);
-				return [["between",lower,higher],val];
-			} else {
-				return [["ormore",table.maxlimit],table.maxdata];
-			}
+			return table.flowstep ? this.tableOverflow(table,limit) : [["ormore",table.maxlimit],table.maxdata];
 		} else {
 			var n = _.find(table.range,function(n){return limit >= table.limits[n] && limit < table.limits[n+1];});
 			return [["between",table.limits[n],table.limits[n+1]],table.data[n]];
 		}
 	},
-	lookUpInTableOLD: function(table,limit){
-		return limit < table.minlimit ? table.mindata : limit >= table.maxlimit ? (table.calcMax ? table.calcMax(limit) : table.maxdata) : table.data[_.find(limit <= table.midlimit ? table.range : table.revrange,function(n){
-			return limit >= table.limits[n] && limit < table.limits[n+1];
-		})];
-	},
 	matchValue: function(against,val){
-		//console.log(" ... MATCHVALUE ",val,"against",against,"type",against[0]);
 		switch(against[0]){
-			case "ormore":
-				//console.log(" ... MATCHVALUE ",val,"against",against,"result",val >= against[1]);
-				return val >= against[1];
-			case "lessthan":
-				//console.log(" ... MATCHVALUE ",val,"against",against,"result",val < against[1]);
-				return val < against[1];
+			case "ormore": return val >= against[1];
+			case "lessthan": return val < against[1];
 			case "between": return val >= against[1] && val < against[2];
 			default: return val === against;
 		}
 	},
 	performMatch: function(match,data){
-		//console.log("matching",match,"against",data);
 		return _.reduce(match,function(memo,testpropval,testpropname){
 			return memo && this.matchValue(testpropval,data[testpropname]);
 		},true,this);
@@ -304,7 +331,7 @@ window.rolast = {
 		return arr;
 	},
 	testAxleGroupPropulsion: function(data,type,n,grouparr){
-		return !!(data.hasEngine && n === grouparr.length-1); // how to do this? :P
+		return !!(data.hasEngine && n === grouparr.length-1); // TODO how to do this? :P
 	},
 	processAxleGroup: function(data,axleobj,n,grouparr){
 		return _.extend(axleobj,{
@@ -313,11 +340,14 @@ window.rolast = {
 			groupOrderNumber: n,
 			weightLimit: data.axleWeightLimits[n],
 			descriptionName: this.nameAxleGroup(data,axleobj,n,grouparr),
-			road: data.road
+			road: data.road,
+			last: n === grouparr.length-1
 		});
 	},
 	nameAxleGroup: function(data,axleobj,n,grouparr){
-		return ["FOOBAR","axeln","boggien","trippelaxeln"][axleobj.axles]; // TODO - främre, bakre and shit
+		var name = ["FOOBAR","axeln","boggien","trippelaxeln"][axleobj.axles],
+			pre = (axleobj.axles === 1 ? (!n ? "fram" : n === grouparr.length-1?"bak":"") : "");
+		return pre+name;
 	},
 	processAxleGroupArray: function(data,grouparr){
 		return _.map(grouparr,function(axle,index){
@@ -330,7 +360,7 @@ window.rolast = {
 			totalAxleDistance: _.reduce(data.axleDistances,function(mem,d){return (mem*1000+d*1000)/1000;},0),
 			numberOfAxles: data.axleDistances.length+1,
 			hasEngine: !!data.hasEngine,
-			hasGoodSuspension: !!data.hasGoodSuspension,
+			hasGoodSuspension: !!data.hasGoodSuspension, // TODO - calc this!
 			isJointBus: !!data.isJointBus
 		},data);
 	},
@@ -338,8 +368,23 @@ window.rolast = {
 		var desc = ["FOOBAR","axel","boggie","trippel"][axle.axles],
 			width = (axle.axles!=1?"<span class='axlewidth'>"+axle.axleWidth+"m</span>":""),
 			weight = (axle.weightLimit?"<span class='axlemax'>"+axle.weightLimit+"ton</span>":""),
-			dist = (axle.distanceToNext ? "<span class='axledistancetonext'>"+axle.distanceToNext+"m</span>":"");
+			dist = (axle.distanceToNext ? "<span class='axledistancetonext"+(axle.lastBeforeCoupling?" lastaxlegroup":"")+"'>"+axle.distanceToNext+"m</span>":"");
 		return "<span class='axle axle-"+desc+"'><span class='axledesc'>"+desc+"</span>"+width+weight+"</span>"+dist;
+	},
+	buildTrain: function(engine,trailer){
+		var between = engine.couplingDistance + trailer.couplingDistance;
+		return {
+			hasEngine: true,
+			isTrain: true,
+			totalAxleDistance: (engine.totalAxleDistance*1000 + between*1000 + trailer.totalAxleDistance*1000)/1000,
+			numberOfAxles: engine.numberOfAxles + trailer.numberOfAxles,
+			groupedAxles: _.map(engine.groupedAxles.concat(trailer.groupedAxles),function(g,n){
+				return n === engine.groupedAxles.length-1 ? _.extend(g,{distanceToNext:between,lastBeforeCoupling:true}) : g;
+			}),
+			engine: engine,
+			serviceWeight: (engine.serviceWeight*1000 + trailer.serviceWeight*1000)/1000,
+			trailer: trailer
+		};
 	}
 };
 

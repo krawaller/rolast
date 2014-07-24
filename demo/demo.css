@@ -23,6 +23,11 @@
 	top: 1.7em;
 	text-align: center;
 }
+
+.axledistancetonext.lastaxlegroup {
+	border-top-style: dashed;
+}
+
 .axledesc, .axlewidth {
 	display: block;
 }
@@ -82,7 +87,7 @@ input[type="text"], input.wide {
 	margin-left:1em;
 }
 
-#totalresult:after, #totalaxleresult:after {
+#totalresult:after, #totalaxleresult:after, #trainresult:after {
 	content: " ";
 	clear: both;
 	display: block;
