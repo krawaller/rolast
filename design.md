@@ -38,3 +38,21 @@ vägverkets skit:
 	max släpvagnsvikt: ucUtdata_maxSlap
 	släp max totalvikt vid körkort B: ucUtdata_maxSlapB
 	Max axelavstånd axel 1-2, mm: MaxAxelAvst1Rub
+
+
+
+
+
+
+	VYER
+
+*  X Lista
+*    New/edit
+*    välj tillkoppling till valt fordon
+*  X resultat
+*    paragraf
+
+
+
+
+

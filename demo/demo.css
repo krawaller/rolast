@@ -1,11 +1,15 @@
+
+.axlecontainer {
+	float: left;
+	text-align: center;
+}
+
 .axle {
 	display: block;
-	float: left;
 	min-height: 4em;
 	min-width: 4em;
 	border-radius: 2em;
 	background-color: #DDD;
-	text-align: center;
 }
 .axle-boggie {
 	min-width: 7em;

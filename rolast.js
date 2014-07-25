@@ -50,7 +50,7 @@ window.rolast = {
 	},
 	printCalcResult: function(calcres,data,lvl){
 		if (!lvl) { lvl = 0;}
-		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+calcres.title+"</span> <span class='calcresult'>"+calcres.result+"</span>";
+		var str = "<span class='calcprint calc"+lvl+((lvl%2)?" calcodd":"")+"'><span class='calctitle'>"+calcres.title+"</span>"+(calcres.type === "all" ? "" : "<span class='calcresult'>"+calcres.result+"</span>");
 		if (calcres.type != "read"){
 			str += "<button class='calczoomer'>visa</button>";
 			str += "<span class='calcdesc'>"+calcres.desc+"</span>";
@@ -60,13 +60,23 @@ window.rolast = {
 		}
 		return str+"</span>";
 	},
+	printFlatCalcResult: function(calcres,detail,index){
+		var str = "<span class='calc"+(detail?"title":"explanation")+"'>"+calcres.title+"</span>"+(calcres.type === "all" ? "" : "<span class='calcresult'>"+calcres.result+"</span>");
+		if (calcres.type != "read" && !detail){
+			str += "<span class='calcdesc'>"+calcres.desc+"</span>";
+			str += _.reduce(calcres.used || [],function(s,part,n){
+				return s+this.printFlatCalcResult(part,true,n);
+			},"",this);
+		}
+		return "<span class='calc"+(detail?(calcres.type!="read" ? "multi" : "")+"part":"overview")+"'"+(detail?" data-index='"+index+"'":"")+">"+str+"</span>";
+	},
 	describe: function(res,data){
 		if (!this.descriptions[res.name]){
 			throw "Unknown description name: "+res.name;
 		}
 		var name = res.name,
 			title = this.descriptions[name][0].replace("%NAME",(res.useddata||data).descriptionName),
-			desc = (this.descriptions[name][1] || "").replace("%NAME",(res.useddata||data).descriptionName);
+			desc = (this.descriptions[name][1] || "").replace("%NAME",(res.useddata||data).descriptionName);
 		return _.extend(res,{
 			title: title,
 			desc: this[desc] ? this[desc](res,data) : desc
@@ -83,6 +93,11 @@ window.rolast = {
 		AXELMAX: ["begränsning enligt regler","describeAxleLimit"],
 		REGAXELMAX: ["begränsning från registreringsbevis"],
 		TJAENSTEVIKT: ["tjänstevikt från registreringsbevis"],
+		FORDONSLASTVIKTFOERALLAVAEGAR: ["Här är fordonets maximala lastvikt för de olika bärighetsklasserna:"],
+		TAAGLASTVIKTFOERALLAVAEGAR: ["Här är fordonstågets maximala lastvikt för de olika bärighetsklasserna:"],
+		MAXLASTBK1: ["Maxlast på BK1-väg","Skillnaden mellan tillåten totalvikt och tjänstevikt:"],
+		MAXLASTBK2: ["Maxlast på BK2-väg","Skillnaden mellan tillåten totalvikt och tjänstevikt:"],
+		MAXLASTBK3: ["Maxlast på BK3-väg","Skillnaden mellan tillåten totalvikt och tjänstevikt:"],
 		// tåågskit
 		TAAGVIKT: ["fordonstågets maximala vikt","Fordonstågets maxvikt är den minsta av tabellslagning av fordonståget som helhet och summan av delarnas maxvikter:"],
 		TAAGTJAENSTEVIKT: ["fordonstågets tjänstevikt","Tjänstevikten för fordonståget är summan av delarnas tjänstevikter:"],
@@ -95,6 +110,12 @@ window.rolast = {
 
 	},
 	calculations: {
+		maxTrainLoadForAllRoads:
+			["all","TAAGLASTVIKTFOERALLAVAEGAR",
+				["with",{road:1},"calc","maxTrainLoad","MAXLASTBK1"],
+				["with",{road:2},"calc","maxTrainLoad","MAXLASTBK2"],
+				["with",{road:3},"calc","maxTrainLoad","MAXLASTBK3"]
+			],
 		maxTrainLoad:
 			["subtract","DIFFERENSEN",
 				["calc","maxTrainWeight"],
@@ -129,12 +150,22 @@ window.rolast = {
 			["subtract","DIFFERENSEN",
 				["calc","maxVehicleWeight"],
 				["read","TJAENSTEVIKT","serviceWeight"]
+			],
+		maxVehicleLoadForAllRoads:
+			["all","FORDONSLASTVIKTFOERALLAVAEGAR",
+				["with",{road:1},"calc","maxVehicleLoad","MAXLASTBK1"],
+				["with",{road:2},"calc","maxVehicleLoad","MAXLASTBK2"],
+				["with",{road:3},"calc","maxVehicleLoad","MAXLASTBK3"]
 			]
 	},
 	calculate: function(calc,data){
 		if (calc.hasOwnProperty("result")) { return calc; } // already processed!
+		if (calc[0] === "with") {
+			data = _.extend(data,calc[1]);
+			calc = _.rest(calc,2);
+		}
 		if (calc[0] === "for") {
-			data = data[calc[1]];
+			data = _.extend(data[calc[1]],{road:data.road}); // pass on road
 			calc = _.rest(calc,2);
 		}
 		if (calc[0] === "calc") {
@@ -168,7 +199,7 @@ window.rolast = {
 	},
 	calculateeach: function(arr,calc,data){
 		return _.map(arr,function(el){
-			return this.calculate(calc,el);
+			return this.calculate(calc,_.extend(el,{road:data.road})); // pass on road
 		},this);
 	},
 	calculateread: function(propname,data){
@@ -208,6 +239,12 @@ window.rolast = {
 			},0,this);
 		return deps.length === 1 ? deps[0] : {
 			result: sum,
+			used: deps
+		};
+	},
+	calculateall: function(calcs,data){
+		var deps = _.map(calcs,function(el){ return this.calculate(el,data); },this);
+		return deps.length === 1 ? deps[0] : {
 			used: deps
 		};
 	},
@@ -354,7 +391,7 @@ window.rolast = {
 			return this.processAxleGroup(data,axle,index,grouparr);
 		},this);
 	},
-	processData: function(data){
+	processVehicle: function(data){
 		return _.extend({
 			groupedAxles: this.processAxleGroupArray(data,this.findAxleGroupArray(data.axleDistances)),
 			totalAxleDistance: _.reduce(data.axleDistances,function(mem,d){return (mem*1000+d*1000)/1000;},0),
@@ -365,13 +402,28 @@ window.rolast = {
 		},data);
 	},
 	drawAxle: function(axle){
-		var desc = ["FOOBAR","axel","boggie","trippel"][axle.axles],
+		var name = ["FOOBAR","axel","boggie","trippel"][axle.axles],
+			desc = "<span class='axledesc'>"+name+"</span>",
 			width = (axle.axles!=1?"<span class='axlewidth'>"+axle.axleWidth+"m</span>":""),
 			weight = (axle.weightLimit?"<span class='axlemax'>"+axle.weightLimit+"ton</span>":""),
 			dist = (axle.distanceToNext ? "<span class='axledistancetonext"+(axle.lastBeforeCoupling?" lastaxlegroup":"")+"'>"+axle.distanceToNext+"m</span>":"");
-		return "<span class='axle axle-"+desc+"'><span class='axledesc'>"+desc+"</span>"+width+weight+"</span>"+dist;
+		return "<span class='axlecontainer'><span class='axle axle-"+name+"'>"+desc+weight+"</span>"+width+"</span>"+dist;
+	},
+	drawAxleGroup: function(groupedAxles){
+		return _.reduce(groupedAxles,function(str,axle){return str+this.drawAxle(axle);},"",this);
+	},
+	findCouplingMatches: function(vehicle,all){ // all is object, returns arr
+		return _.reduce(all,function(memo,other){
+			console.log("Coupling matching",vehicle.vehicleid,other.vehicleid);
+			return memo.concat((vehicle.couplingDistance && other.couplingDistance && vehicle.hasEngine !== other.hasEngine) ? other : []);
+		},[]);
 	},
 	buildTrain: function(engine,trailer){
+		if (engine.hasEngine === false){
+			var temp = engine;
+			engine = trailer;
+			trailer = temp;
+		}
 		var between = engine.couplingDistance + trailer.couplingDistance;
 		return {
 			hasEngine: true,
@@ -379,15 +431,13 @@ window.rolast = {
 			totalAxleDistance: (engine.totalAxleDistance*1000 + between*1000 + trailer.totalAxleDistance*1000)/1000,
 			numberOfAxles: engine.numberOfAxles + trailer.numberOfAxles,
 			groupedAxles: _.map(engine.groupedAxles.concat(trailer.groupedAxles),function(g,n){
-				return n === engine.groupedAxles.length-1 ? _.extend(g,{distanceToNext:between,lastBeforeCoupling:true}) : g;
+				return n === engine.groupedAxles.length-1 ? _.extend({},g,{distanceToNext:between,lastBeforeCoupling:true}) : g;
 			}),
 			engine: engine,
 			serviceWeight: (engine.serviceWeight*1000 + trailer.serviceWeight*1000)/1000,
-			trailer: trailer
+			trailer: trailer,
+			type: "fordonståg",
+			vehicleid: engine.vehicleid+"+"+trailer.vehicleid
 		};
 	}
 };
-
-
-
-

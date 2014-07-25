@@ -59,7 +59,7 @@ describe("the table reader",function(){
 			var limit = 19.2, res = lookUpInTable(table,limit);
 			it("returns correct value",function(){ expect(res[1]).toEqual(34); });
 		});
-		describe("when called with past calc limit that needs calc",function(){
+		/*describe("when called with past calc limit that needs calc",function(){
 			var limit = 22, res = lookUpInTable(table,limit);
 			it("returns correct value",function(){ expect(res[1]).toEqual(37.5); });
 		});
@@ -74,7 +74,7 @@ describe("the table reader",function(){
 		describe("when called with past calc limit that needs calc",function(){
 			var limit = 22.4, res = lookUpInTable(table,limit);
 			it("returns correct value",function(){ expect(res[1]).toEqual(38); });
-		});
+		});*/
 	});
 });
 

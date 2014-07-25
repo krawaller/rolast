@@ -168,7 +168,7 @@ $("#totalform").submit(function(e){
 			isJointBus: form.type === "jointbus",
 			hasGoodSuspension: !!form.susp,
 		},
-		pdata = rolast.processData(data);
+		pdata = rolast.processVehicle(data);
 	if (pdata.axleWeightLimits.length > 0 && pdata.groupedAxles.length != pdata.axleWeightLimits.length){
 		$("#totalresult").html("Efter gruppering har vi "+pdata.groupedAxles.length+" axlar, men maxgränserna innehöll "+pdata.axleWeightLimits.length+" värden! De måste vara samma antal!");
 	} else {
@@ -180,13 +180,17 @@ $("#totalform").submit(function(e){
 
 // TRAIN TEST
 
-var truck = rolast.processData({road:1,hasEngine:true,serviceWeight: 10.8, maxWeight: 26, couplingDistance: 3.2,axleDistances:[4.8,1.38],axleWeightLimits:[9,18]}),
-	trailer = rolast.processData({road:1,hasEngine:false,serviceWeight: 6, maxWeight: 70, couplingDistance: 7, axleDistances:[0.72,8,2,2],axleWeightLimits:[13,22]}),
+var truck = rolast.processVehicle({road:1,hasEngine:true,serviceWeight: 10.8, maxWeight: 26, couplingDistance: 3.2,axleDistances:[4.8,1.38],axleWeightLimits:[9,18]}),
+	trailer = rolast.processVehicle({road:1,hasEngine:false,serviceWeight: 6, maxWeight: 70, couplingDistance: 7, axleDistances:[0.72,8,2,2],axleWeightLimits:[13,22]}),
 	train = rolast.buildTrain(truck,trailer),
 	result = rolast.calculate(rolast.calculations.maxTrainLoad, _.extend({road:1},train));
 
 $("#trainresult").html(rolast.printCalcResult(result,train));
 $("#trainaxleresult").html( _.reduce(train.groupedAxles,function(str,axle){return str+rolast.drawAxle(axle);},"") );
 
-console.log(train);
+// ALL TEST
 
+var truck = rolast.processVehicle({road:1,hasEngine:true,serviceWeight: 10.8, maxWeight: 26, couplingDistance: 3.2,axleDistances:[4.8,1.38],axleWeightLimits:[9,18]}),
+	result = rolast.calculate(rolast.calculations.maxVehicleLoadForAllRoads, truck );
+
+$("#allresult").html(rolast.printCalcResult(result,truck));
