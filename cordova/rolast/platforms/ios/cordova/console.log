@@ -1,0 +1,49 @@
+2014-07-25 15:29:41.701 HelloCordova[19036:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:29:41.788 HelloCordova[19036:70b] Unlimited access to network resources
+2014-07-25 15:29:41.817 HelloCordova[19036:70b] ERROR: Start Page at 'www/index.html' was not found.
+2014-07-25 15:29:42.532 HelloCordova[19036:70b] Resetting plugins due to page load.
+2014-07-25 15:29:42.579 HelloCordova[19036:70b] Finished load of: about:blank
+2014-07-25 15:30:39.365 HelloCordova[19180:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:30:39.375 HelloCordova[19180:70b] Unlimited access to network resources
+2014-07-25 15:30:39.517 HelloCordova[19180:70b] Resetting plugins due to page load.
+2014-07-25 15:30:39.670 HelloCordova[19180:70b] Finished load of: file:///Users/KungD/Library/Application%20Support/iPhone%20Simulator/7.1/Applications/B282A49C-9280-4D1F-8D46-4F71603C51B3/HelloCordova.app/www/index.html
+2014-07-25 15:32:58.316 HelloCordova[19267:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:32:58.326 HelloCordova[19267:70b] Unlimited access to network resources
+2014-07-25 15:32:58.429 HelloCordova[19267:70b] Resetting plugins due to page load.
+2014-07-25 15:33:11.648 HelloCordova[19267:3f03] void SendDelegateMessage(NSInvocation *): delegate (webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:) failed to return after waiting 10 seconds. main run loop mode: kCFRunLoopDefaultMode
+2014-07-25 15:33:11.663 HelloCordova[19267:70b] Finished load of: file:///Users/KungD/Library/Application%20Support/iPhone%20Simulator/7.1/Applications/B282A49C-9280-4D1F-8D46-4F71603C51B3/HelloCordova.app/www/index.html
+2014-07-25 15:33:58.007 HelloCordova[19350:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:33:58.017 HelloCordova[19350:70b] Unlimited access to network resources
+2014-07-25 15:33:58.129 HelloCordova[19350:70b] Resetting plugins due to page load.
+2014-07-25 15:35:23.958 HelloCordova[19449:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:35:23.967 HelloCordova[19449:70b] Unlimited access to network resources
+2014-07-25 15:35:24.107 HelloCordova[19449:70b] Resetting plugins due to page load.
+2014-07-25 15:35:41.172 HelloCordova[19449:70b] Finished load of: file:///Users/KungD/Library/Application%20Support/iPhone%20Simulator/7.1/Applications/B282A49C-9280-4D1F-8D46-4F71603C51B3/HelloCordova.app/www/index.html
+2014-07-25 15:41:06.352 HelloCordova[19539:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:41:06.363 HelloCordova[19539:70b] Unlimited access to network resources
+2014-07-25 15:41:06.450 HelloCordova[19539:70b] Resetting plugins due to page load.
+2014-07-25 15:41:10.802 HelloCordova[19539:70b] Finished load of: file:///Users/KungD/Library/Application%20Support/iPhone%20Simulator/7.1/Applications/B282A49C-9280-4D1F-8D46-4F71603C51B3/HelloCordova.app/www/index.html
+2014-07-25 15:42:24.589 HelloCordova[19633:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:42:24.598 HelloCordova[19633:70b] Unlimited access to network resources
+2014-07-25 15:42:24.684 HelloCordova[19633:70b] Resetting plugins due to page load.
+2014-07-25 15:42:56.690 HelloCordova[19633:3f03] void SendDelegateMessage(NSInvocation *): delegate (webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:) failed to return after waiting 10 seconds. main run loop mode: kCFRunLoopDefaultMode
+2014-07-25 15:43:15.877 HelloCordova[19633:3f03] void SendDelegateMessage(NSInvocation *): delegate (webView:runJavaScriptAlertPanelWithMessage:initiatedByFrame:) failed to return after waiting 10 seconds. main run loop mode: kCFRunLoopDefaultMode
+2014-07-25 15:43:17.144 HelloCordova[19633:70b] Finished load of: file:///Users/KungD/Library/Application%20Support/iPhone%20Simulator/7.1/Applications/B282A49C-9280-4D1F-8D46-4F71603C51B3/HelloCordova.app/www/index.html
+2014-07-25 15:44:41.839 HelloCordova[19735:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:44:41.848 HelloCordova[19735:70b] Unlimited access to network resources
+2014-07-25 15:44:42.021 HelloCordova[19735:70b] Resetting plugins due to page load.
+2014-07-25 15:45:45.831 HelloCordova[19820:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:45:45.840 HelloCordova[19820:70b] Unlimited access to network resources
+2014-07-25 15:45:46.082 HelloCordova[19820:70b] Resetting plugins due to page load.
+2014-07-25 15:47:36.545 HelloCordova[19923:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:47:36.582 HelloCordova[19923:70b] Unlimited access to network resources
+2014-07-25 15:47:36.756 HelloCordova[19923:70b] Resetting plugins due to page load.
+2014-07-25 15:48:13.881 HelloCordova[20017:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:48:13.901 HelloCordova[20017:70b] Unlimited access to network resources
+2014-07-25 15:48:14.069 HelloCordova[20017:70b] Resetting plugins due to page load.
+2014-07-25 15:48:23.073 HelloCordova[20017:70b] Finished load of: file:///Users/KungD/Library/Application%20Support/iPhone%20Simulator/7.1/Applications/B282A49C-9280-4D1F-8D46-4F71603C51B3/HelloCordova.app/www/index.html
+2014-07-25 15:50:19.279 Rolast[20143:70b] Multi-tasking -> Device: YES, App: YES
+2014-07-25 15:50:19.298 Rolast[20143:70b] Unlimited access to network resources
+2014-07-25 15:50:19.310 Rolast[20143:70b] Fix applied for database locations?: YES
+2014-07-25 15:50:19.551 Rolast[20143:70b] Resetting plugins due to page load.
+2014-07-25 15:50:19.719 Rolast[20143:70b] Finished load of: file:///Users/KungD/Library/Application%20Support/iPhone%20Simulator/7.1/Applications/F30C2347-9D48-4D9C-9174-F017949659B1/Rolast.app/www/index.html

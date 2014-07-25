@@ -11,7 +11,7 @@ processTable = function(table){
 	});
 };
 
-window.rolast = {
+rolast = {
 	describeAxle: function(data){
 		var desc = "en "+(data.isPropulsionAxle === true ? "drivande " : data.isPropulsionAxle === false ? "ickedrivande " : ""),
 			kind = ["","axel ","boggie ","trippelaxel "][data.axles] || "",

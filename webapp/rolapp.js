@@ -1,4 +1,4 @@
-window.rolapp = {
+rolapp = {
 	vehicles: _.mapValues({
 		lastbilsteori1: {
 			axleDistances: [5.7],
@@ -83,7 +83,6 @@ window.rolapp = {
 			},500);
 		});
 		rolapp.wrapper.append(view.el);
-		console.log("STACKED THE VIEW GADDÄMMITTTT",view,rolapp.wrapper);
 		_.delay(function(){
 			view.$el.removeClass("stackedright");
 		},10);
@@ -91,9 +90,8 @@ window.rolapp = {
 	wrapper: $("#wrapper"),
 	launch: function(){
 		$("#templates").empty();
-		var main = new window.rolapp.MainView();
+		var main = new rolapp.MainView();
 		main.render();
 		main.$el.appendTo(rolapp.wrapper);
 	}
 };
-

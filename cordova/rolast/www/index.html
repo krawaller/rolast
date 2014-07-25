@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Rolast</title>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+		<link rel='stylesheet' href='app.css'></link>
+	</head>
+	<body>
+		<script type="text/javascript" src="cordova.js"></script>
+		<!--APP CONTAINER-->
+		<div id="wrapper"></div>
+		<!--TEMPLATES-->
+		<div id="templates">
+			<div id="mainviewtemplate">
+				<p>Välkommen till Rolast! välj ett fordon woo!</p>
+				<div class='vehiclelist'></div>
+				<p>Sedan ska vi såklart också kunna lägga till ett fordon här.</p>
+			</div>
+			<div id="vehiclelistitemviewtemplate">
+				<div><span class='type'></span> &quot;<span class='name'></span>&quot;</div>
+				<div class='axledrawing group'></div>
+			</div>
+			<div id="resultviewtemplate">
+				<p>Result woo! :)</p>
+			</div>
+			<div id="vehicleviewtemplate">
+				<div class='drawing'></div>
+				<p>Välj vad du vill göra med fordonet:</p>
+				<p><button class='calcweight'>Beräkna maxlast</button></p>
+				<p><button class='coupling'>Koppla till...</button></p>
+			</div>
+			<div id="trainselectviewtemplate">
+				<p>Välj fordonståg att räkna lastvikt för:</p>
+				<div class='trainlist'></div>
+			</div>
+		</div>
+		<!--DEPENDENCIES-->
+		<script type="text/javascript" src="lib/lodash/lodash.js"></script>
+		<script type="text/javascript" src="lib/lodash/lodashmixins.js"></script>
+		<script type="text/javascript" src="lib/jquery/jquery.js"></script>
+		<script type="text/javascript" src="lib/backbone/backbone.js"></script>
+		<script type="text/javascript" src="rolast.js"></script>
+		<!--APP SOURCE-->
+		<script type="text/javascript" src="rolapp.js"></script>
+		<script type="text/javascript" src="views/base.js"></script>
+		<script type="text/javascript" src="views/main.js"></script>
+		<script type="text/javascript" src="views/vehiclelistitem.js"></script>
+		<script type="text/javascript" src="views/vehicle.js"></script>
+		<script type="text/javascript" src="views/result.js"></script>
+		<script type="text/javascript" src="views/train.js"></script>
+		<!--LAUNCH-->
+		<script type="text/javascript">
+			rolapp.launch();
+		</script>
+	</body>
+</html>
