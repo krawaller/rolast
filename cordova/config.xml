@@ -1,0 +1,15 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="se.krawaller.rolast" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Rolast</name>
+    <description>
+        Rolands lastapp!
+    </description>
+    <author email="david@krawaller.se" href="http://www.krawaller.se">
+        Apache Cordova Team
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+
+    <preference name="DisallowOverscroll" value="true"/>
+    <preference name="WebViewBounce" value="false" />
+</widget>
