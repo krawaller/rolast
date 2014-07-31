@@ -180,8 +180,9 @@ $("#totalform").submit(function(e){
 
 // TRAIN TEST
 
-var truck = rolast.processVehicle({road:1,hasEngine:true,serviceWeight: 10.8, maxWeight: 26, couplingDistance: 3.2,axleDistances:[4.8,1.38],axleWeightLimits:[9,18]}),
-	trailer = rolast.processVehicle({road:1,hasEngine:false,serviceWeight: 6, maxWeight: 70, couplingDistance: 7, axleDistances:[0.72,8,2,2],axleWeightLimits:[13,22]}),
+
+var truck = rolast.processVehicle({road:1,hasEngine:true,serviceWeight: 12.15, maxWeight: 25, couplingDistance: 2.38,axleDistances:[4.3,1.37],axleWeightLimits:[9,21]}),
+	trailer = rolast.processVehicle({road:1,hasEngine:false,serviceWeight: 8.81, maxWeight: 36, couplingDistance: 4.34, axleDistances:[1.31,5.2,1.4],axleWeightLimits:[18,20]}),
 	train = rolast.buildTrain(truck,trailer),
 	result = rolast.calculate(rolast.calculations.maxTrainLoad, _.extend({road:1},train));
 

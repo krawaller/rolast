@@ -15,7 +15,6 @@ rolapp.MainView = Backbone.View.extend({
 		return this;
 	},
 	updateBackButton: function(){
-		console.log("update back button",this.stack)
 		switch(Math.min(this.stack.length,2)){
 			case 0: this.$el.removeClass("multiback singleback"); break;
 			case 1: this.$el.addClass("singleback").removeClass("multiback"); break;
@@ -26,15 +25,12 @@ rolapp.MainView = Backbone.View.extend({
 		this.listenTo(view,"stack",this.stackView,this);
 	},
 	stackView: function(view){
-		view.$el.addClass("stackedright");
 		this.stack.push(view);
 		this.updateBackButton();
-		console.log("stacked!",this.stack.length);
-		//view.$el.prepend("<div class='topbar'><button class='backbutton'>Tillbaka</button></div>");
-		this.$el.append(view.el);
+		this.$el.append(view.$el.addClass("stackedright"));
 		_.delay(function(){
 			view.$el.removeClass("stackedright");
-		},10);
+		},30);
 		this.web(view);
 	},
 	popView: function(e,all){

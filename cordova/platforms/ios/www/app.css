@@ -26,6 +26,7 @@ body {
 	-o-transition: -o-transform 0.4s ease-in-out;
 	transition: transform 0.4s ease-in-out;
 	overflow-y: scroll;
+	-webkit-overflow-scrolling: touch;
 }
 
 .stackedright {
@@ -35,14 +36,23 @@ body {
 	transform: translate3d(105%, 0, 0);
 }
 
-.calcpart,.calcmultipart {
+.calcpart, .calcmultipart, .calcreadpart {
 	display: block;
 	float: left;
 	clear: left;
 	padding: 3px;
 	margin: 3px;
 	margin-left: 3em;
+	margin-bottom: 1em;
 	border: 1px solid black;
+}
+
+.calcmultipart:active {
+	background-color: yellow;
+}
+
+.calcreadpart {
+	border-style: dashed;
 }
 
 .calcresult {
@@ -53,12 +63,18 @@ body {
 .calcdesc {
 	display: block;
 	clear: left;
-	font-style: italic;
-	font-size: 0.9em;
+	margin-bottom: 1em;
+	margin-top: 1em;
 }
 
-.calctitle {
+.calcdetailtitle, .calctitle {
 	text-decoration: underline;
+	font-size: 1.2em;
+	margin-bottom: 1em;
+}
+
+.calcdetailtitle {
+	font-size: 1em;
 }
 
 .vehiclelist {
@@ -119,7 +135,7 @@ body {
 }
 
 .axledrawing {
-	font-size: 0.7em;
+	font-size: 0.6em;
 }
 
 .group:after {

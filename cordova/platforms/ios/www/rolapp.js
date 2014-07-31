@@ -53,6 +53,15 @@ rolapp = {
 			maxWeight: 3.49,
 			type: "personbil",
 			hasEngine: true
+		},
+		davidtrailer: {
+			axleDistances: [0.6,8,0.6],
+			axleWeightLimits: [14,17],
+			serviceWeight: 6,
+			maxWeight: 38,
+			type: "trailer",
+			hasEngine: false,
+			couplingDistance: 4.3
 		}
 	},function(v,id){return _.extend({vehicleid:id},rolast.processVehicle(v));}),
 	getVehicles: function(){ return rolapp.vehicles; },
